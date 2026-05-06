@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>myWiki — 个人理解的镜子</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.0/dist/cytoscape.min.js"></script>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+    --accent: #0f172a;
+    --tag-bg: #f1f5f9;
+    --hover: #f5f5f4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.65; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted #cbd5e1; }
+  a:hover { background: #fef3c7; }
+  code { background: #f1f5f9; padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.9em; }
+  pre code { background: none; padding: 0; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 1em; border-radius: 6px; overflow-x: auto; }
+
+  /* Layout */
+  .app { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
+  nav.side {
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 20px 18px; overflow-y: auto;
+  }
+  nav.side h1 { font-size: 18px; margin: 0 0 6px; letter-spacing: 0.02em; }
+  nav.side .tagline { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+  nav.side .navgroup { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 18px 0 6px; letter-spacing: 0.08em; }
+  nav.side .navlink { display: block; padding: 6px 8px; margin: 2px 0; border-radius: 5px; cursor: pointer; border-bottom: none; color: var(--text); font-size: 14px; }
+  nav.side .navlink:hover { background: var(--hover); }
+  nav.side .navlink.active { background: #fde68a; }
+  nav.side .search { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: var(--bg); margin-bottom: 8px; }
+
+  main.view { overflow-y: auto; padding: 32px 56px; max-width: 100%; }
+  main.view.graph-mode { padding: 0; }
+
+  .meta-chip { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; color: white; margin-right: 6px; vertical-align: middle; }
+  .domain-tag { display: inline-block; padding: 1px 8px; border-radius: 4px; background: var(--tag-bg); color: #475569; font-size: 11px; margin-right: 4px; margin-bottom: 4px; }
+  .status { font-size: 11px; padding: 1px 7px; border-radius: 3px; background: #e7e5e4; color: #57534e; margin-left: 4px; }
+  .status.seed { background: #fef3c7; color: #92400e; }
+  .status.growing { background: #dbeafe; color: #1e40af; }
+  .status.mature { background: #d1fae5; color: #065f46; }
+  .status.archived { background: #e7e5e4; color: #57534e; }
+
+  /* Node detail */
+  .node-header h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.3; }
+  .node-meta { color: var(--muted); font-size: 12px; margin-bottom: 24px; }
+  .node-body { font-size: 16px; line-height: 1.8; }
+  .node-body h2 { font-size: 20px; margin-top: 28px; }
+  .node-body h3 { font-size: 16px; }
+  .node-body table { border-collapse: collapse; margin: 12px 0; }
+  .node-body table th, .node-body table td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+  .node-body table th { background: var(--tag-bg); }
+  .node-body blockquote { border-left: 3px solid #cbd5e1; padding: 4px 14px; color: var(--muted); margin: 12px 0; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-top: 24px; }
+  .panel h3 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+  /* Relations panel — upgraded */
+  .rel-section { margin-bottom: 16px; }
+  .rel-section:last-child { margin-bottom: 0; }
+  .rel-section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; padding-left: 4px; }
+  .rel-section-title.in { color: #64748b; }
+  .rel-section-title.out { color: #475569; }
+  .rel-row { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 10px 12px; border-radius: 7px; transition: background 0.15s; cursor: pointer; align-items: start; margin-bottom: 4px; }
+  .rel-row:hover { background: #f8fafc; }
+  .rel-row .rtype {
+    font-size: 11px; padding: 3px 8px; border-radius: 4px;
+    background: #f1f5f9; color: #475569; font-weight: 500;
+    text-align: center; align-self: start; line-height: 1.4;
+    border: 1px solid #e2e8f0;
+  }
+  .rel-row.in .rtype { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+  .rel-row.out .rtype { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+  .rel-row .rcontent { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .rel-row .rtitle { display: flex; align-items: center; gap: 6px; font-size: 14px; flex-wrap: wrap; }
+  .rel-row .rtitle a { border-bottom: none; font-weight: 500; }
+  .rel-row .rtitle a:hover { background: #fef3c7; }
+  .rel-row .rnote { color: var(--muted); font-size: 12px; font-style: italic; line-height: 1.5; }
+  .rel-row .ricon { font-size: 12px; }
+
+  /* Hover popover */
+  .popover {
+    position: fixed; z-index: 100;
+    width: 360px; max-width: 90vw;
+    background: white; border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    padding: 14px 16px;
+    pointer-events: none;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 0.12s, transform 0.12s;
+    font-size: 13px;
+  }
+  .popover.show { opacity: 1; transform: translateY(0); }
+  .popover .pop-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; line-height: 1.3; }
+  .popover .pop-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .popover .pop-snippet { color: #334155; line-height: 1.6; max-height: 140px; overflow: hidden; position: relative; }
+  .popover .pop-snippet::after {
+    content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 30px;
+    background: linear-gradient(to bottom, transparent, white);
+  }
+  .popover .pop-hint { font-size: 11px; color: var(--muted); margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+
+  .source-item { padding: 4px 0; font-size: 13px; color: var(--muted); }
+
+  #localGraph { width: 100%; height: 560px; background:
+    radial-gradient(circle at 50% 50%, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--border); border-radius: 8px; }
+  #globalGraph { width: 100%; height: calc(100vh - 80px); }
+
+  .back-bar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px; font-size: 13px;
+  }
+  .back-bar .back-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 11px; border-radius: 6px; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); transition: all 0.12s;
+  }
+  .back-bar .back-btn:hover { background: var(--hover); border-color: #cbd5e1; }
+  .back-bar .crumb-trail { color: var(--muted); font-size: 12px; }
+  .back-bar .crumb-trail a { color: var(--muted); border-bottom: none; }
+  .back-bar .crumb-trail a:hover { color: var(--text); }
+
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .home-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 22px; }
+  .home-card h3 { margin: 0 0 14px; font-size: 14px; }
+  .home-card .item { padding: 7px 0; border-bottom: 1px solid #f5f5f4; font-size: 14px; }
+  .home-card .item:last-child { border-bottom: none; }
+
+  .legend { position: absolute; top: 14px; right: 14px; background: white; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; z-index: 5; }
+  .legend .lg-item { display: flex; align-items: center; margin: 4px 0; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+
+  .search-results { margin-top: 8px; }
+  .search-results .sr-item { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 13px; }
+  .search-results .sr-item:hover { background: var(--hover); }
+  .search-results .sr-snippet { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .search-results mark { background: #fde68a; padding: 0 2px; border-radius: 2px; }
+
+  /* Auth gate */
+  .auth-gate { display: flex; align-items: center; justify-content: center; height: 100vh; background: var(--bg); }
+  .auth-box { background: white; border: 1px solid var(--border); padding: 36px 40px; border-radius: 10px; width: 360px; }
+  .auth-box h2 { margin: 0 0 6px; }
+  .auth-box p { color: var(--muted); margin: 0 0 18px; font-size: 13px; }
+  .auth-box input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+  .auth-box button { width: 100%; padding: 10px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .auth-error { color: #dc2626; font-size: 12px; margin-top: 8px; }
+  .auth-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 14px; }
+
+  .meta-type-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .meta-type-legend .item { display: inline-flex; align-items: center; }
+  .meta-type-legend .dot { width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+
+  .crumb { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .crumb a { color: var(--muted); border-bottom: none; }
+</style>
+</head>
+<body>
+
+<div id="authGate" class="auth-gate" style="display:none">
+  <div class="auth-box">
+    <h2>myWiki</h2>
+    <p>个人理解的镜子。需要登录才能查看。</p>
+    <input id="authPwd" type="password" placeholder="访问密码" />
+    <button onclick="tryAuth()">进入</button>
+    <div id="authErr" class="auth-error"></div>
+    <div class="auth-hint">demo 密码：<code>demo</code></div>
+  </div>
+</div>
+
+<div id="app" class="app" style="display:none">
+  <nav class="side">
+    <h1>myWiki</h1>
+    <div class="tagline">个人理解的镜子 · 不是博客</div>
+
+    <input class="search" id="searchInput" placeholder="搜索节点..." oninput="onSearch()" />
+    <div class="search-results" id="searchResults"></div>
+
+    <div class="navgroup">视图</div>
+    <a class="navlink" onclick="goHome()" id="nav-home">首页</a>
+    <a class="navlink" onclick="goGraph()" id="nav-graph">全局图谱</a>
+    <a class="navlink" onclick="goEmergence()" id="nav-emergence">涌现 · 自进化</a>
+    <a class="navlink" onclick="goAllNodes()" id="nav-all">全部节点</a>
+
+    <div class="navgroup">入口节点</div>
+    <div id="hubLinks"></div>
+
+    <div class="navgroup">领域</div>
+    <div id="domainLinks"></div>
+  </nav>
+  <main class="view" id="view"></main>
+</div>
+
+<script src="data.js"></script>
+<script>
+/* ---------- auth ---------- */
+function showAuth() {
+  document.getElementById("authGate").style.display = "flex";
+  document.getElementById("app").style.display = "none";
+}
+function showApp() {
+  document.getElementById("authGate").style.display = "none";
+  document.getElementById("app").style.display = "grid";
+  init();
+}
+function tryAuth() {
+  var v = document.getElementById("authPwd").value;
+  if (v === "demo") {
+    sessionStorage.setItem("mywiki_auth", "1");
+    showApp();
+  } else {
+    document.getElementById("authErr").textContent = "密码不对";
+  }
+}
+document.addEventListener("keydown", function(e){
+  if (e.key === "Enter" && document.getElementById("authGate").style.display === "flex") tryAuth();
+});
+
+/* ---------- graph build ---------- */
+var DATA = window.WIKI_DATA;
+var BY_ID = {};
+var BACK_EDGES = {};   // id -> [{from, type, note}]
+var WIKILINK_RE = /\[\[([a-z0-9-]+)\]\]/g;
+
+function buildIndex() {
+  DATA.nodes.forEach(function(n){
+    BY_ID[n.id] = n;
+    BACK_EDGES[n.id] = [];
+  });
+  // expand wikilinks in body to relations if not already declared
+  DATA.nodes.forEach(function(n){
+    n.relations = n.relations || [];
+    var declared = new Set(n.relations.map(function(r){ return r.to; }));
+    var m;
+    while ((m = WIKILINK_RE.exec(n.body)) !== null) {
+      if (BY_ID[m[1]] && !declared.has(m[1]) && m[1] !== n.id) {
+        n.relations.push({ to: m[1], type: "related", auto: true });
+        declared.add(m[1]);
+      }
+    }
+  });
+  // back edges
+  DATA.nodes.forEach(function(n){
+    n.relations.forEach(function(r){
+      if (BY_ID[r.to]) {
+        BACK_EDGES[r.to].push({ from: n.id, type: r.type, note: r.note });
+      }
+    });
+  });
+  // metrics
+  DATA.nodes.forEach(function(n){
+    n.metrics = {
+      out_degree: n.relations.length,
+      in_degree: BACK_EDGES[n.id].length,
+    };
+  });
+}
+
+/* ---------- routing (history stack) ---------- */
+var HISTORY = [];   // stack of past hashes (does NOT include current)
+var IS_BACK = false;
+
+function setActive(id) {
+  document.querySelectorAll(".navlink").forEach(function(el){ el.classList.remove("active"); });
+  if (id) { var el = document.getElementById(id); if (el) el.classList.add("active"); }
+}
+
+window.addEventListener("hashchange", function(e){
+  if (!IS_BACK && e.oldURL) {
+    var oldHash = (e.oldURL.split("#")[1] || "");
+    if (oldHash) HISTORY.push(oldHash);
+  }
+  IS_BACK = false;
+  route();
+});
+
+function goBack() {
+  if (HISTORY.length === 0) {
+    location.hash = "home";
+    return;
+  }
+  var prev = HISTORY.pop();
+  IS_BACK = true;
+  location.hash = prev;
+}
+
+function route() {
+  hidePopover();
+  var h = location.hash.slice(1);
+  if (!h || h === "home") return renderHome();
+  if (h === "graph") return renderGraph();
+  if (h === "emergence") return renderEmergence();
+  if (h === "all") return renderAllNodes();
+  if (h.indexOf("domain/") === 0) return renderDomain(decodeURIComponent(h.slice(7)));
+  if (h.indexOf("node/") === 0) return renderNode(h.slice(5));
+  renderHome();
+}
+
+/* sidebar onclick wrappers — set hash, hashchange triggers route */
+function goHome()       { location.hash = "home"; }
+function goGraph()      { location.hash = "graph"; }
+function goEmergence()  { location.hash = "emergence"; }
+function goAllNodes()   { location.hash = "all"; }
+
+/* ---------- views ---------- */
+var view = function(){ return document.getElementById("view"); };
+function clearGraphMode(){ view().classList.remove("graph-mode"); }
+
+function backBarHtml(crumbs) {
+  var trail = (crumbs || []).map(function(c, i){
+    if (c.href) return "<a href='"+c.href+"'>"+c.label+"</a>";
+    return "<span>"+c.label+"</span>";
+  }).join(" <span style='color:#cbd5e1'>›</span> ");
+  return "<div class='back-bar'>"
+    + "<span class='back-btn' onclick='goBack()' title='返回上一页'>← 返回</span>"
+    + "<span class='crumb-trail'>"+trail+"</span>"
+    + "</div>";
+}
+
+function renderHome() {
+  setActive("nav-home");
+  clearGraphMode();
+  var sortedByIn = DATA.nodes.slice().sort(function(a,b){ return b.metrics.in_degree - a.metrics.in_degree; });
+  var hubs = sortedByIn.filter(function(n){ return n.metrics.in_degree >= 2; }).slice(0, 6);
+  var questions = DATA.nodes.filter(function(n){ return n.meta_type === "question"; });
+  var seeds = DATA.nodes.filter(function(n){ return n.status === "seed" || n.status === "growing"; }).slice(0, 6);
+  var crossDomain = DATA.nodes.filter(function(n){ return (n.domains||[]).length >= 2; }).slice(0, 6);
+
+  var html = "";
+  html += "<h2 style='margin-top:0'>欢迎回来</h2>";
+  html += "<p style='color:var(--muted);margin-bottom:32px'>共 " + DATA.nodes.length + " 个节点。这里展示当前你脑中的形状——hub、跨域连接、悬而未决的问题。</p>";
+
+  html += metaTypeLegendHtml();
+
+  html += "<div class='home-grid'>";
+  html += homeCard("入口 hub（最多被引用）", hubs.map(function(n){
+    return cardItem(n, "← " + n.metrics.in_degree + " 入链");
+  }));
+  html += homeCard("跨领域节点（多 domain 标签）", crossDomain.map(function(n){
+    return cardItem(n, (n.domains||[]).join(" · "));
+  }));
+  html += homeCard("开放问题", questions.map(function(n){
+    return cardItem(n, n.body.slice(0, 60).replace(/\n/g, ""));
+  }));
+  html += homeCard("正在生长（seed / growing）", seeds.map(function(n){
+    return cardItem(n, n.status);
+  }));
+  html += "</div>";
+
+  view().innerHTML = html;
+  attachHoverPopovers();
+}
+
+function metaTypeLegendHtml() {
+  var s = "<div class='meta-type-legend'>";
+  Object.keys(DATA.metaTypes).forEach(function(k){
+    var t = DATA.metaTypes[k];
+    s += "<span class='item' title='"+t.desc+"'><span class='dot' style='background:"+t.color+"'></span>"+t.icon+" "+t.label+"</span>";
+  });
+  s += "</div>";
+  return s;
+}
+
+function homeCard(title, items) {
+  return "<div class='home-card'><h3>"+title+"</h3>"+(items.join("") || "<div class='item' style='color:var(--muted)'>—</div>")+"</div>";
+}
+function cardItem(n, sub) {
+  var t = DATA.metaTypes[n.meta_type];
+  return "<div class='item'>"
+    + "<a href='#node/"+n.id+"' data-nodeid='"+n.id+"'>"+n.title+"</a>"
+    + " <span class='meta-chip' style='background:"+t.color+"' title='"+t.desc+"'>"+t.icon+" "+t.label+"</span>"
+    + "<div style='font-size:11px;color:var(--muted);margin-top:2px'>"+sub+"</div>"
+    + "</div>";
+}
+
+function renderNode(id) {
+  setActive(null);
+  clearGraphMode();
+  var n = BY_ID[id];
+  if (!n) { view().innerHTML = backBarHtml([{label:"节点不存在"}]) + "<p>节点 id：" + id + "</p>"; return; }
+  var t = DATA.metaTypes[n.meta_type];
+
+  var html = "";
+  html += backBarHtml([{label: "首页", href: "#home"}, {label: n.title}]);
+  html += "<div class='node-header'>";
+  html += "<h2>"+n.title+"</h2>";
+  html += "<div class='node-meta'>";
+  html += "<span class='meta-chip' style='background:"+t.color+"' title='"+t.desc+"'>"+t.icon+" "+t.label+"</span>";
+  html += "<span class='status "+n.status+"'>"+n.status+"</span>";
+  html += " · wiki: <code>"+n.wiki+"</code>";
+  html += " · 创建 "+n.created+" · 更新 "+n.updated;
+  html += " · ←"+n.metrics.in_degree+" 入 / →"+n.metrics.out_degree+" 出";
+  html += "<div style='margin-top:6px'>";
+  (n.domains || []).forEach(function(d){
+    html += "<a class='domain-tag' href='#domain/"+encodeURIComponent(d)+"' style='border-bottom:none'>"+d+"</a>";
+  });
+  html += "</div>";
+  html += "</div></div>";
+
+  // body — render markdown + inline wikilinks (with hover preview)
+  var bodyMd = n.body.replace(WIKILINK_RE, function(_, id){
+    var target = BY_ID[id];
+    return target ? "["+target.title+"](#node/"+id+")" : "[["+id+"]]";
+  });
+  html += "<div class='node-body'>" + marked.parse(bodyMd) + "</div>";
+
+  // sources
+  if (n.sources && n.sources.length) {
+    html += "<div class='panel'><h3>来源（素材出处）</h3>";
+    n.sources.forEach(function(s){
+      html += "<div class='source-item'>📄 "+s.title+" <code>"+s.path+"</code></div>";
+    });
+    html += "</div>";
+  }
+
+  // relations — upgraded layout
+  var fwd = n.relations.filter(function(r){ return BY_ID[r.to]; });
+  var back = BACK_EDGES[n.id] || [];
+  if (fwd.length || back.length) {
+    html += "<div class='panel'><h3>语义关联</h3>";
+    if (fwd.length) {
+      html += "<div class='rel-section'>";
+      html += "<div class='rel-section-title out'>↗ 我指向（"+fwd.length+"）</div>";
+      fwd.forEach(function(r){
+        html += relRowHtml(BY_ID[r.to], r.type, r.note, "out");
+      });
+      html += "</div>";
+    }
+    if (back.length) {
+      html += "<div class='rel-section'>";
+      html += "<div class='rel-section-title in'>↩ 指向我（"+back.length+"）</div>";
+      back.forEach(function(r){
+        var inverseType = DATA.inverseLabels[r.type] || r.type;
+        html += relRowHtml(BY_ID[r.from], inverseType, r.note, "in");
+      });
+      html += "</div>";
+    }
+    html += "</div>";
+  }
+
+  // local graph
+  html += "<div class='panel'><h3>局部图谱（点击节点跳转）</h3><div id='localGraph'></div></div>";
+
+  view().innerHTML = html;
+  renderLocalGraph(n);
+  attachHoverPopovers();
+}
+
+function relRowHtml(targetNode, typeLabel, note, dir) {
+  var t = DATA.metaTypes[targetNode.meta_type];
+  var displayType = DATA.relationTypes[typeLabel] || typeLabel;
+  return "<div class='rel-row "+dir+"' onclick=\"location.hash='node/"+targetNode.id+"'\" data-nodeid='"+targetNode.id+"'>"
+    + "<div class='rtype'>"+displayType+"</div>"
+    + "<div class='rcontent'>"
+    +   "<div class='rtitle'>"
+    +     "<span class='ricon' title='"+t.desc+"'>"+t.icon+"</span>"
+    +     "<a href='#node/"+targetNode.id+"' data-nodeid='"+targetNode.id+"' onclick='event.stopPropagation()'>"+targetNode.title+"</a>"
+    +     "<span class='meta-chip' style='background:"+t.color+";font-size:10px;padding:1px 6px'>"+t.label+"</span>"
+    +     "<span class='status "+targetNode.status+"'>"+targetNode.status+"</span>"
+    +   "</div>"
+    +   (note ? "<div class='rnote'>"+escapeHtml(note)+"</div>" : "")
+    + "</div>"
+    + "</div>";
+}
+
+function escapeHtml(s) {
+  return (s||"").replace(/[&<>"']/g, function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]; });
+}
+
+function renderLocalGraph(n) {
+  // collect 1-hop neighbors with direction
+  var nbrInfo = {};
+  nbrInfo[n.id] = { dir: "center" };
+  n.relations.forEach(function(r){
+    if (BY_ID[r.to] && r.to !== n.id) nbrInfo[r.to] = { dir: "out" };
+  });
+  (BACK_EDGES[n.id]||[]).forEach(function(r){
+    if (r.from === n.id) return;
+    if (nbrInfo[r.from]) nbrInfo[r.from].dir = "both";
+    else nbrInfo[r.from] = { dir: "in" };
+  });
+
+  // helper: smart truncate
+  function shortLabel(title, max) {
+    if (title.length <= max) return title;
+    return title.slice(0, max - 1) + "…";
+  }
+
+  var elements = [];
+  Object.keys(nbrInfo).forEach(function(id){
+    var m = BY_ID[id];
+    var isCenter = (id === n.id);
+    elements.push({ data: {
+      id: id,
+      label: isCenter ? shortLabel(m.title, 14) : shortLabel(m.title, 11),
+      color: DATA.metaTypes[m.meta_type].color,
+      isCenter: isCenter ? 1 : 0,
+    }});
+  });
+
+  // edges between center and neighbors
+  n.relations.forEach(function(r){
+    if (nbrInfo[r.to] && r.to !== n.id) {
+      elements.push({ data: { id: "out-"+r.to, source: n.id, target: r.to, label: DATA.relationTypes[r.type] || r.type, kind: "out" }});
+    }
+  });
+  (BACK_EDGES[n.id]||[]).forEach(function(r){
+    if (r.from === n.id) return;
+    elements.push({ data: { id: "in-"+r.from, source: r.from, target: n.id, label: DATA.relationTypes[r.type] || r.type, kind: "in" }});
+  });
+
+  var nbrCount = Object.keys(nbrInfo).length - 1;
+
+  var cy = cytoscape({
+    container: document.getElementById("localGraph"),
+    elements: elements,
+    style: [
+      // neighbor nodes: label OUTSIDE (below)
+      { selector: "node", style: {
+        "background-color": "data(color)",
+        "label": "data(label)",
+        "color": "#1c1917",
+        "font-size": "13px",
+        "font-weight": "500",
+        "text-wrap": "wrap",
+        "text-max-width": 140,
+        "text-valign": "bottom",
+        "text-margin-y": 10,
+        "width": 44, "height": 44,
+        "border-width": 2.5, "border-color": "#ffffff",
+        "shadow-blur": 10,
+        "shadow-color": "#64748b",
+        "shadow-opacity": 0.2,
+        "shadow-offset-x": 0,
+        "shadow-offset-y": 2,
+      }},
+      // center node: label INSIDE, bigger
+      { selector: "node[isCenter = 1]", style: {
+        "width": 110, "height": 110,
+        "border-width": 4, "border-color": "#0f172a",
+        "label": "data(label)",
+        "font-size": "14px",
+        "font-weight": "700",
+        "color": "#ffffff",
+        "text-valign": "center",
+        "text-halign": "center",
+        "text-margin-y": 0,
+        "text-max-width": 90,
+        "text-wrap": "wrap",
+        "text-outline-width": 0,
+      }},
+      { selector: "edge", style: {
+        "width": 2,
+        "line-color": "#cbd5e1",
+        "curve-style": "bezier",
+        "target-arrow-shape": "triangle",
+        "target-arrow-color": "#94a3b8",
+        "arrow-scale": 1.2,
+        "label": "data(label)",
+        "font-size": "11px",
+        "font-weight": "500",
+        "color": "#475569",
+        "text-background-color": "#ffffff",
+        "text-background-opacity": 1,
+        "text-background-padding": "4px",
+        "text-background-shape": "roundrectangle",
+        "text-border-color": "#e2e8f0",
+        "text-border-opacity": 1,
+        "text-border-width": 1,
+        "text-rotation": "autorotate",
+        "source-endpoint": "outside-to-node",
+        "target-endpoint": "outside-to-node",
+      }},
+      { selector: "edge[kind = 'in']", style: {
+        "line-color": "#fcd34d",
+        "target-arrow-color": "#f59e0b",
+      }},
+      { selector: "edge[kind = 'out']", style: {
+        "line-color": "#93c5fd",
+        "target-arrow-color": "#3b82f6",
+      }},
+      { selector: "node:active", style: {
+        "overlay-padding": 8,
+        "overlay-color": "#0f172a",
+        "overlay-opacity": 0.1,
+      }},
+    ],
+    layout: {
+      name: "concentric",
+      concentric: function(node){ return node.data("isCenter") ? 100 : 1; },
+      levelWidth: function(){ return 1; },
+      minNodeSpacing: Math.max(80, 700 / Math.max(nbrCount, 1)),
+      padding: 80,
+      animate: false,
+      startAngle: 3 * Math.PI / 2,  // start at top
+      sweep: 2 * Math.PI,
+      avoidOverlap: true,
+    },
+    wheelSensitivity: 0.2,
+    minZoom: 0.4, maxZoom: 2.5,
+    boxSelectionEnabled: false,
+    autoungrabify: false,
+  });
+
+  // tap to navigate. NO hover popover on cyto nodes (interferes with clicks).
+  cy.on("tap", "node", function(e){
+    location.hash = "node/" + e.target.id();
+  });
+  // small hover effect: highlight node
+  cy.on("mouseover", "node", function(e){
+    e.target.style({ "border-color": "#0f172a", "border-width": e.target.data("isCenter") ? 4 : 3.5 });
+    document.body.style.cursor = "pointer";
+  });
+  cy.on("mouseout", "node", function(e){
+    e.target.removeStyle("border-color border-width");
+    document.body.style.cursor = "";
+  });
+}
+
+function renderGraph() {
+  setActive("nav-graph");
+  view().classList.add("graph-mode");
+  view().innerHTML =
+    "<div style='position:relative'><div id='globalGraph'></div>" +
+    "<div class='legend'><strong style='font-size:11px;display:block;margin-bottom:6px'>元类型</strong>" +
+    Object.keys(DATA.metaTypes).map(function(k){
+      var t = DATA.metaTypes[k];
+      return "<div class='lg-item'><span class='dot' style='background:"+t.color+"'></span>"+t.icon+" "+t.label+"</div>";
+    }).join("") +
+    "</div></div>";
+
+  var elements = [];
+  DATA.nodes.forEach(function(n){
+    elements.push({ data: { id: n.id, label: n.title, color: DATA.metaTypes[n.meta_type].color, size: 18 + Math.min(28, n.metrics.in_degree * 5) }});
+  });
+  DATA.nodes.forEach(function(n){
+    n.relations.forEach(function(r){
+      if (BY_ID[r.to]) elements.push({ data: { source: n.id, target: r.to }});
+    });
+  });
+
+  var cy = cytoscape({
+    container: document.getElementById("globalGraph"),
+    elements: elements,
+    style: [
+      { selector: "node", style: {
+        "background-color": "data(color)",
+        "label": "data(label)", "font-size": "10px",
+        "text-wrap": "wrap", "text-max-width": 100,
+        "text-valign": "bottom", "text-margin-y": 4,
+        "width": "data(size)", "height": "data(size)",
+        "border-width": 1, "border-color": "#fff"
+      }},
+      { selector: "edge", style: {
+        "width": 1, "line-color": "#e2e8f0",
+        "curve-style": "bezier", "target-arrow-shape": "triangle",
+        "target-arrow-color": "#cbd5e1", "arrow-scale": 0.8,
+      }},
+    ],
+    layout: { name: "cose", animate: false, padding: 60, idealEdgeLength: 110, nodeRepulsion: 8000 },
+    wheelSensitivity: 0.2,
+  });
+  cy.on("mouseover", "node", function(){ document.body.style.cursor = "pointer"; });
+  cy.on("mouseout", "node", function(){ document.body.style.cursor = ""; });
+  cy.on("tap", "node", function(e){ location.hash = "node/" + e.target.id(); });
+}
+
+function renderEmergence() {
+  setActive("nav-emergence");
+  clearGraphMode();
+
+  var hubs = DATA.nodes.slice().sort(function(a,b){ return b.metrics.in_degree - a.metrics.in_degree; }).slice(0, 8);
+  var orphans = DATA.nodes.filter(function(n){ return n.metrics.in_degree === 0 && n.metrics.out_degree === 0; });
+  var openQs = DATA.nodes.filter(function(n){ return n.meta_type === "question"; });
+  var crossHubs = DATA.nodes.filter(function(n){
+    var dCount = (n.domains||[]).length;
+    return n.metrics.in_degree >= 2 && dCount >= 2;
+  });
+  var recent = DATA.nodes.slice().sort(function(a,b){ return (b.updated||"").localeCompare(a.updated||""); }).slice(0, 6);
+  var overload = DATA.nodes.filter(function(n){ return n.body.length > 350 && n.metrics.in_degree >= 2; });
+
+  var html = "";
+  html += backBarHtml([{label: "首页", href: "#home"}, {label: "涌现 · 自进化"}]);
+  html += "<h2 style='margin-top:0'>涌现 · 自进化</h2>";
+  html += "<p style='color:var(--muted);margin-bottom:24px'>这一页展示 wiki 自身的形状变化。<br>它不是导航——是给你看见自己思考的镜子。</p>";
+
+  html += "<div class='home-grid'>";
+  html += homeCard("🪐 hub 节点（按入链）", hubs.map(function(n){ return cardItem(n, "← " + n.metrics.in_degree + " 入链"); }));
+  html += homeCard("🌐 跨域 hub（连接不同领域）", crossHubs.map(function(n){
+    return cardItem(n, (n.domains||[]).join(" + "));
+  }));
+  html += homeCard("❓ 开放问题积压", openQs.map(function(n){
+    return cardItem(n, "存在 " + daysSince(n.created) + " 天，" + n.metrics.in_degree + " 入链");
+  }));
+  html += homeCard("⚠️ 候选拆分（overload signal）", overload.map(function(n){
+    return cardItem(n, "正文 " + n.body.length + " 字 · " + n.metrics.in_degree + " 入链 · LLM 可能提议拆分");
+  }));
+  html += homeCard("🕒 最近更新", recent.map(function(n){ return cardItem(n, n.updated); }));
+  html += homeCard("🏝 孤岛节点（无入无出）", orphans.map(function(n){ return cardItem(n, "未连接"); }));
+  html += "</div>";
+
+  view().innerHTML = html;
+  attachHoverPopovers();
+}
+
+function daysSince(dateStr) {
+  var d = new Date(dateStr);
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function renderAllNodes() {
+  setActive("nav-all");
+  clearGraphMode();
+  var byMeta = {};
+  DATA.nodes.forEach(function(n){ (byMeta[n.meta_type] = byMeta[n.meta_type] || []).push(n); });
+  var html = backBarHtml([{label: "首页", href: "#home"}, {label: "全部节点"}]);
+  html += "<h2 style='margin-top:0'>全部节点</h2>" + metaTypeLegendHtml();
+  Object.keys(DATA.metaTypes).forEach(function(k){
+    var arr = byMeta[k] || [];
+    if (!arr.length) return;
+    var t = DATA.metaTypes[k];
+    html += "<h3 style='margin-top:24px;font-size:14px'><span class='meta-chip' style='background:"+t.color+"'>"+t.icon+" "+t.label+"</span> "+t.desc+" <span style='color:var(--muted);font-weight:400;font-size:12px'>("+arr.length+")</span></h3>";
+    html += "<div style='margin-left:6px'>";
+    arr.forEach(function(n){
+      html += "<div style='padding:5px 0;font-size:14px'>"
+        + "<a href='#node/"+n.id+"' data-nodeid='"+n.id+"'>"+n.title+"</a>"
+        + " <span class='status "+n.status+"'>"+n.status+"</span>"
+        + " <span style='color:var(--muted);font-size:12px;margin-left:6px'>"+(n.domains||[]).join(" ")+"</span>"
+        + "</div>";
+    });
+    html += "</div>";
+  });
+  view().innerHTML = html;
+  attachHoverPopovers();
+}
+
+function renderDomain(d) {
+  setActive(null);
+  clearGraphMode();
+  var arr = DATA.nodes.filter(function(n){ return (n.domains||[]).indexOf(d) !== -1; });
+  var html = backBarHtml([{label: "首页", href: "#home"}, {label: "领域"}, {label: d}]);
+  html += "<h2 style='margin-top:0'>"+d+"</h2>";
+  html += "<p style='color:var(--muted)'>"+arr.length+" 个节点</p>";
+  html += "<div>";
+  arr.forEach(function(n){
+    var t = DATA.metaTypes[n.meta_type];
+    html += "<div style='padding:8px 0;border-bottom:1px solid var(--border)'>"
+      + "<a href='#node/"+n.id+"' data-nodeid='"+n.id+"'>"+n.title+"</a>"
+      + " <span class='meta-chip' style='background:"+t.color+"'>"+t.icon+" "+t.label+"</span>"
+      + " <span class='status "+n.status+"'>"+n.status+"</span>"
+      + "<div style='color:var(--muted);font-size:12px;margin-top:3px'>"+n.body.slice(0,80).replace(/\n/g," ")+"…</div>"
+      + "</div>";
+  });
+  html += "</div>";
+  view().innerHTML = html;
+  attachHoverPopovers();
+}
+
+/* ---------- popover for node previews ---------- */
+var POPOVER_EL = null;
+function ensurePopover() {
+  if (POPOVER_EL) return POPOVER_EL;
+  POPOVER_EL = document.createElement("div");
+  POPOVER_EL.className = "popover";
+  document.body.appendChild(POPOVER_EL);
+  return POPOVER_EL;
+}
+function showPopoverForNode(nodeId, x, y) {
+  var n = BY_ID[nodeId];
+  if (!n) return;
+  var el = ensurePopover();
+  var t = DATA.metaTypes[n.meta_type];
+  var snippetSrc = (n.body || "").replace(WIKILINK_RE, function(_, id){
+    var target = BY_ID[id];
+    return target ? target.title : id;
+  });
+  var snippet = snippetSrc.slice(0, 280);
+  if (snippetSrc.length > 280) snippet += "…";
+  el.innerHTML = ""
+    + "<div class='pop-title'>"
+    +   "<span style='display:inline-block;width:10px;height:10px;border-radius:50%;background:"+t.color+";margin-right:6px;vertical-align:middle'></span>"
+    +   escapeHtml(n.title)
+    + "</div>"
+    + "<div class='pop-meta'>"+t.icon+" "+t.label
+    +   " · <span class='status "+n.status+"' style='margin:0'>"+n.status+"</span>"
+    +   " · ←"+n.metrics.in_degree+" / →"+n.metrics.out_degree
+    +   (n.domains && n.domains.length ? " · " + n.domains.join(" ") : "")
+    + "</div>"
+    + "<div class='pop-snippet'>"+escapeHtml(snippet).replace(/\n/g, "<br>")+"</div>"
+    + "<div class='pop-hint'>点击节点跳转到详情</div>";
+  // position
+  var pw = 360, ph = 220;
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var px = Math.min(Math.max(x - pw/2, 8), vw - pw - 8);
+  var py = y - ph - 12;
+  if (py < 8) py = y + 24;
+  el.style.left = px + "px";
+  el.style.top = py + "px";
+  el.classList.add("show");
+}
+function hidePopover() {
+  if (POPOVER_EL) POPOVER_EL.classList.remove("show");
+}
+/* attach hover preview to any [data-nodeid] / a[href^='#node/'] in current view */
+function attachHoverPopovers() {
+  var els = view().querySelectorAll("a[href^='#node/'], [data-nodeid]");
+  els.forEach(function(el){
+    var id = el.getAttribute("data-nodeid");
+    if (!id) {
+      var href = el.getAttribute("href") || "";
+      if (href.indexOf("#node/") === 0) id = href.slice(6);
+    }
+    if (!id || !BY_ID[id]) return;
+    var hideTimer = null;
+    el.addEventListener("mouseenter", function(e){
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      var rect = el.getBoundingClientRect();
+      showPopoverForNode(id, rect.left + rect.width/2, rect.top);
+    });
+    el.addEventListener("mouseleave", function(){
+      hideTimer = setTimeout(hidePopover, 120);
+    });
+  });
+}
+
+/* ---------- search (substring + simple ranking) ---------- */
+function onSearch() {
+  var q = document.getElementById("searchInput").value.trim().toLowerCase();
+  var box = document.getElementById("searchResults");
+  if (!q) { box.innerHTML = ""; return; }
+  var hits = [];
+  DATA.nodes.forEach(function(n){
+    var hay = (n.title + " " + n.body + " " + (n.domains||[]).join(" ")).toLowerCase();
+    var idx = hay.indexOf(q);
+    if (idx !== -1) {
+      var titleHit = n.title.toLowerCase().indexOf(q) !== -1;
+      hits.push({ n: n, score: titleHit ? 100 : (1000 - idx), idx: idx });
+    }
+  });
+  hits.sort(function(a,b){ return b.score - a.score; });
+  box.innerHTML = hits.slice(0, 8).map(function(h){
+    var t = DATA.metaTypes[h.n.meta_type];
+    var snip = h.n.body.slice(Math.max(0, h.idx - 20), h.idx + 60).replace(/\n/g, " ");
+    snip = snip.replace(new RegExp(q, "ig"), function(m){ return "<mark>"+m+"</mark>"; });
+    return "<div class='sr-item' onclick=\"location.hash='node/"+h.n.id+"';document.getElementById('searchResults').innerHTML='';document.getElementById('searchInput').value=''\">"
+      + "<span class='meta-chip' style='background:"+t.color+";font-size:10px;padding:1px 5px'>"+t.label+"</span> "
+      + h.n.title
+      + "<div class='sr-snippet'>…"+snip+"…</div>"
+      + "</div>";
+  }).join("") || "<div class='sr-item' style='color:var(--muted)'>没有结果</div>";
+}
+
+/* ---------- sidebar fillers ---------- */
+function fillSidebar() {
+  var hubs = DATA.nodes.slice().sort(function(a,b){ return b.metrics.in_degree - a.metrics.in_degree; }).filter(function(n){ return n.metrics.in_degree >= 2; }).slice(0, 6);
+  document.getElementById("hubLinks").innerHTML = hubs.map(function(n){
+    return "<a class='navlink' href='#node/"+n.id+"' style='font-size:13px'>"+n.title+"</a>";
+  }).join("");
+
+  var domains = {};
+  DATA.nodes.forEach(function(n){ (n.domains||[]).forEach(function(d){ domains[d] = (domains[d]||0) + 1; }); });
+  var sorted = Object.keys(domains).sort(function(a,b){ return domains[b] - domains[a]; });
+  document.getElementById("domainLinks").innerHTML = sorted.map(function(d){
+    return "<a class='navlink' href='#domain/"+encodeURIComponent(d)+"' style='font-size:13px'>"+d+" <span style='color:var(--muted);font-size:11px'>"+domains[d]+"</span></a>";
+  }).join("");
+}
+
+function init() {
+  buildIndex();
+  fillSidebar();
+  route();
+}
+
+/* ---------- entry ---------- */
+if (sessionStorage.getItem("mywiki_auth") === "1") {
+  showApp();
+} else {
+  showAuth();
+}
+</script>
+
+</body>
+</html>
