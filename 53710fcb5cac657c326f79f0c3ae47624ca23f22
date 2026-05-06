@@ -1,0 +1,174 @@
+content/meta/index.md
+  da64904ce5e5e552 1-27
+content/nodes/emergence-over-taxonomy.md
+  da64904ce5e5e552 1-23
+SCHEMA.md
+  da64904ce5e5e552 1-95
+site/src/app/node/[id]/page.tsx
+  da64904ce5e5e552 1-80
+site/src/components/Sidebar.tsx
+  da64904ce5e5e552 1-93
+site/tsconfig.json
+  da64904ce5e5e552 1-34
+site/CLAUDE.md
+  da64904ce5e5e552 1
+content/nodes/marshmallow-experiment-replication.md
+  da64904ce5e5e552 1-19
+content/nodes/morning-light-anchors-rhythm.md
+  da64904ce5e5e552 1-21
+content/nodes/subagent-thread-isolation.md
+  da64904ce5e5e552 1-19
+site/.gitignore
+  da64904ce5e5e552 1-41
+site/package.json
+  da64904ce5e5e552 1-34
+content/meta/log.md
+  da64904ce5e5e552 1-7
+site/src/app/globals.css
+  da64904ce5e5e552 1-45
+content/nodes/npm-flattening.md
+  da64904ce5e5e552 1-21
+content/nodes/product-roadmap-patience.md
+  da64904ce5e5e552 1-23
+content/nodes/tcp-head-of-line-blocking.md
+  da64904ce5e5e552 1-30
+.claude/settings.local.json
+  da64904ce5e5e552 1-19,22-23
+site/public/vercel.svg
+  da64904ce5e5e552 1
+mywiki.config.ts
+  da64904ce5e5e552 1-14
+docs/PRD.md
+  da64904ce5e5e552 1-226
+.gitignore
+  da64904ce5e5e552 1-6
+content/nodes/self-evolving-nodes.md
+  da64904ce5e5e552 1-25
+docs/mywiki/mywiki-refactor/SKILL.md
+  da64904ce5e5e552 1-88
+site/src/app/layout.tsx
+  da64904ce5e5e552 1-38
+site/README.md
+  da64904ce5e5e552 1-36
+content/nodes/tool-error-tolerance.md
+  da64904ce5e5e552 1-19
+site/src/components/LocalGraph.tsx
+  da64904ce5e5e552 1-157
+content/nodes/pnpm-symlink-strategy.md
+  da64904ce5e5e552 1-24
+site/src/components/HoverPopover.tsx
+  da64904ce5e5e552 1-91
+content/nodes/wiki-vs-blog.md
+  da64904ce5e5e552 1-29
+docs/mywiki/mywiki-query/SKILL.md
+  da64904ce5e5e552 1-48
+site/src/app/graph/page.tsx
+  da64904ce5e5e552 1-23
+site/src/components/RelationPanel.tsx
+  da64904ce5e5e552 1-57
+site/public/file.svg
+  da64904ce5e5e552 1
+site/public/window.svg
+  da64904ce5e5e552 1
+docs/TECH_DESIGN.md
+  da64904ce5e5e552 1-723
+site/src/lib/config.ts
+  da64904ce5e5e552 1-16
+content/nodes/ship-small-iterate-fast.md
+  da64904ce5e5e552 1-19
+site/src/app/emergence/page.tsx
+  da64904ce5e5e552 1-40
+site/src/components/GlobalGraph.tsx
+  da64904ce5e5e552 1-100
+content/nodes/phantom-dependency.md
+  da64904ce5e5e552 1-30
+site/next.config.ts
+  da64904ce5e5e552 1-8
+index.html
+  da64904ce5e5e552 1-893
+content/nodes/http2-multiplexing-limit.md
+  da64904ce5e5e552 1-23
+content/nodes/react-fiber-why-linked-list.md
+  da64904ce5e5e552 1-25
+content/nodes/quic-vs-tcp.md
+  da64904ce5e5e552 1-29
+site/src/app/domain/[tag]/page.tsx
+  da64904ce5e5e552 1-30
+site/src/app/all/page.tsx
+  da64904ce5e5e552 1-87
+docs/mywiki/SKILL.md
+  da64904ce5e5e552 1-35
+docs/mywiki/mywiki-lint/SKILL.md
+  da64904ce5e5e552 1-103
+README.md
+  da64904ce5e5e552 1-45
+site/postcss.config.mjs
+  da64904ce5e5e552 1-7
+site/public/globe.svg
+  da64904ce5e5e552 1
+site/src/lib/parser.ts
+  da64904ce5e5e552 1-115
+content/nodes/what-do-i-want-from-work.md
+  da64904ce5e5e552 1-23
+site/eslint.config.mjs
+  da64904ce5e5e552 1-18
+site/src/lib/domain.ts
+  da64904ce5e5e552 1-7
+site/src/components/BackBar.tsx
+  da64904ce5e5e552 1-12
+site/src/components/SearchBox.tsx
+  da64904ce5e5e552 1-53
+content/nodes/interruptible-rendering.md
+  da64904ce5e5e552 1-22
+content/nodes/ai-coder-tradeoff-pnpm.md
+  da64904ce5e5e552 1-23
+docs/mywiki/mywiki-ingest/SKILL.md
+  da64904ce5e5e552 1-240
+.github/workflows/deploy.yml
+  da64904ce5e5e552 1-35
+content/nodes/agent-engine-react-loop.md
+  da64904ce5e5e552 1-23
+content/nodes/ai-takes-mechanical-recall.md
+  da64904ce5e5e552 1-23
+site/AGENTS.md
+  da64904ce5e5e552 1-5
+site/public/next.svg
+  da64904ce5e5e552 1
+content/nodes/future-of-personal-site.md
+  da64904ce5e5e552 1-27
+sample-nodes/delayed-gratification.md
+  da64904ce5e5e552 1-28
+data.js
+  da64904ce5e5e552 1-445
+content/nodes/delayed-gratification.md
+  da64904ce5e5e552 1-30
+content/nodes/sleep-debt-cant-be-binged.md
+  da64904ce5e5e552 1-19
+site/src/app/page.tsx
+  da64904ce5e5e552 1-52
+site/src/components/NodeCard.tsx
+  da64904ce5e5e552 1-52
+site/src/lib/types.ts
+  da64904ce5e5e552 1-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.11",
+  "base_commit_sha": "53710fcb5cac657c326f79f0c3ae47624ca23f22",
+  "prompts": {
+    "da64904ce5e5e552": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5665d195-f15d-4d3c-8ae0-079daeed3907",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 5050,
+      "total_deletions": 0,
+      "accepted_lines": 5049,
+      "overriden_lines": 1,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/1c3ff807028901e06ca66033beb30dd22ebeb51788c777b459b96c6efd791d71"
+    }
+  }
+}
