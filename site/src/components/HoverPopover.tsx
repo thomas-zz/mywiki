@@ -129,22 +129,33 @@ const Popover = forwardRef<HTMLDivElement, {
   const { node, triggerRect } = data
   const cfg = META_TYPE_CONFIG[node.meta_type]
   const snippet = node.body_raw.replace(/\[\[([a-z0-9-]+)\]\]/g, '$1')
-  const { overrideData } = useWikiDataOverride()
+  const { overrideData, clientPath } = useWikiDataOverride()
+  const pathname = usePathname()
+  const isDetailPage = clientPath.startsWith('/node/') || pathname.startsWith('/node/')
 
   const pw = 360
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800
 
-  const spaceRight = vw - triggerRect.right - 12
-  const spaceLeft = triggerRect.left - 12
-  const showRight = spaceRight >= pw || spaceRight >= spaceLeft
-
-  let left = showRight ? triggerRect.right + 8 : triggerRect.left - pw - 8
-  // Clamp to viewport
-  if (left + pw > vw - 8) left = vw - pw - 8
-  if (left < 8) left = 8
+  let left: number
+  let top: number
   const maxH = Math.min(vh - 32, 380)
-  const top = Math.min(Math.max(triggerRect.top - 20, 8), vh - maxH - 8)
+
+  if (isDetailPage) {
+    left = Math.round(vw * 0.55 - pw / 2)
+    if (left + pw > vw - 8) left = vw - pw - 8
+    if (left < 8) left = 8
+    top = Math.max(8, triggerRect.top - maxH - 12)
+    if (top < 8) top = 8
+  } else {
+    const spaceRight = vw - triggerRect.right - 12
+    const spaceLeft = triggerRect.left - 12
+    const showRight = spaceRight >= pw || spaceRight >= spaceLeft
+    left = showRight ? triggerRect.right + 8 : triggerRect.left - pw - 8
+    if (left + pw > vw - 8) left = vw - pw - 8
+    if (left < 8) left = 8
+    top = Math.min(Math.max(triggerRect.top - 20, 8), vh - maxH - 8)
+  }
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
