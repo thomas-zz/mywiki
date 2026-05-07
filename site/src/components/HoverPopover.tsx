@@ -139,7 +139,10 @@ const Popover = forwardRef<HTMLDivElement, {
   const spaceLeft = triggerRect.left - 12
   const showRight = spaceRight >= pw || spaceRight >= spaceLeft
 
-  const left = showRight ? triggerRect.right + 8 : triggerRect.left - pw - 8
+  let left = showRight ? triggerRect.right + 8 : triggerRect.left - pw - 8
+  // Clamp to viewport
+  if (left + pw > vw - 8) left = vw - pw - 8
+  if (left < 8) left = 8
   const maxH = Math.min(vh - 32, 380)
   const top = Math.min(Math.max(triggerRect.top - 20, 8), vh - maxH - 8)
 
