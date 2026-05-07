@@ -23,7 +23,7 @@ export default async function NodePage({ params }: { params: Promise<{ id: strin
     (_, linkId) => {
       const target = data.nodeMap[linkId]
       if (!target) return `[[${linkId}]]`
-      return `<a href="/node/${linkId}">${target.title}</a>`
+      return `<a href="/node/${linkId}" data-nodeid="${linkId}" class="wiki-link">${target.title}</a>`
     }
   )
 

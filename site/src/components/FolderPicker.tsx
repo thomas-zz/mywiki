@@ -1,7 +1,45 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { Marked } from 'marked'
+import { markedHighlight } from 'marked-highlight'
+import hljs from 'highlight.js/lib/core'
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import python from 'highlight.js/lib/languages/python'
+import bash from 'highlight.js/lib/languages/bash'
+import json from 'highlight.js/lib/languages/json'
+import css from 'highlight.js/lib/languages/css'
+import xml from 'highlight.js/lib/languages/xml'
+import sql from 'highlight.js/lib/languages/sql'
+import yaml from 'highlight.js/lib/languages/yaml'
 import type { WikiNode, WikiData, Edge, Emergence, MetaType, NodeStatus, InsightOrigin } from '@/lib/types'
+
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('js', javascript)
+hljs.registerLanguage('typescript', typescript)
+hljs.registerLanguage('ts', typescript)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('bash', bash)
+hljs.registerLanguage('sh', bash)
+hljs.registerLanguage('json', json)
+hljs.registerLanguage('css', css)
+hljs.registerLanguage('html', xml)
+hljs.registerLanguage('xml', xml)
+hljs.registerLanguage('sql', sql)
+hljs.registerLanguage('yaml', yaml)
+
+const markedInstance = new Marked(
+  markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code: string, lang: string) {
+      if (lang && hljs.getLanguage(lang)) {
+        return hljs.highlight(code, { language: lang }).value
+      }
+      return hljs.highlightAuto(code).value
+    },
+  })
+)
 
 function parseFrontmatter(text: string): { data: Record<string, any>; content: string } {
   const match = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
@@ -9,29 +47,46 @@ function parseFrontmatter(text: string): { data: Record<string, any>; content: s
   const yaml = match[1]
   const content = match[2]
   const data: Record<string, any> = {}
+  const lines = yaml.split('\n')
 
   let currentKey = ''
   let inArray = false
   let arrayItems: any[] = []
+  let currentObj: Record<string, string> | null = null
+  let arrayItemIndent = 0
 
-  for (const line of yaml.split('\n')) {
+  function flushObj() {
+    if (currentObj) { arrayItems.push(currentObj); currentObj = null }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
     if (inArray) {
-      if (line.match(/^\s+-\s/)) {
-        const val = line.replace(/^\s+-\s*/, '').trim()
+      const dashMatch = line.match(/^(\s+)-\s+(.*)/)
+      const contMatch = line.match(/^(\s+)([a-z_]+):\s*(.*)$/)
+
+      if (dashMatch) {
+        flushObj()
+        arrayItemIndent = dashMatch[1].length
+        const val = dashMatch[2].trim()
         if (val.startsWith('{')) {
           try { arrayItems.push(JSON.parse(val.replace(/'/g, '"'))) } catch { arrayItems.push(val) }
-        } else if (val.startsWith('to:') || val.startsWith('title:')) {
-          const obj: Record<string, string> = {}
-          val.split(/,\s*/).forEach(pair => {
-            const [k, ...v] = pair.split(':')
-            if (k && v.length) obj[k.trim()] = v.join(':').trim().replace(/^["']|["']$/g, '')
-          })
-          arrayItems.push(obj)
+        } else if (val.includes(':')) {
+          currentObj = {}
+          const [k, ...v] = val.split(':')
+          if (k && v.length) currentObj[k.trim()] = v.join(':').trim().replace(/^["']|["']$/g, '')
         } else {
           arrayItems.push(val.replace(/^["']|["']$/g, ''))
         }
         continue
+      } else if (contMatch && contMatch[1].length > arrayItemIndent && currentObj) {
+        const k = contMatch[2]
+        const v = contMatch[3].trim().replace(/^["']|["']$/g, '')
+        currentObj[k] = v
+        continue
       } else {
+        flushObj()
         data[currentKey] = arrayItems
         inArray = false
         arrayItems = []
@@ -51,17 +106,9 @@ function parseFrontmatter(text: string): { data: Record<string, any>; content: s
       } else {
         data[currentKey] = val.replace(/^["']|["']$/g, '')
       }
-    } else if (line.match(/^\s+-\s/) && currentKey) {
-      inArray = true
-      const val = line.replace(/^\s+-\s*/, '').trim()
-      if (val.startsWith('{')) {
-        try { arrayItems.push(JSON.parse(val.replace(/'/g, '"'))) } catch { arrayItems.push(val) }
-      } else {
-        arrayItems.push(val.replace(/^["']|["']$/g, ''))
-      }
     }
   }
-  if (inArray) data[currentKey] = arrayItems
+  if (inArray) { flushObj(); data[currentKey] = arrayItems }
 
   return { data, content }
 }
@@ -129,7 +176,7 @@ export function FolderPicker({ onDataLoaded }: { onDataLoaded: (data: WikiData, 
           derived_from: fm.derived_from || [],
           splits_into: fm.splits_into || [],
           body_raw: content,
-          body_html: content,
+          body_html: markedInstance.parse(content, { async: false }) as string,
           metrics: { in_degree: 0, out_degree: 0 },
           back_edges: [],
         }

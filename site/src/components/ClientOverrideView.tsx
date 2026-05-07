@@ -263,14 +263,11 @@ function NodeDetailView({ node, onBack, onNavigate }: { node: WikiNode; onBack: 
   const { overrideData } = useWikiDataOverride()
   if (!overrideData) return null
 
-  const bodyHtml = node.body_raw
+  const bodyHtml = node.body_html
     .replace(/\[\[([a-z0-9-]+)\]\]/g, (_, linkId) => {
       const target = overrideData.nodeMap[linkId]
       return target ? `<a href="#" data-nodeid="${linkId}" class="wiki-link">${target.title}</a>` : `[[${linkId}]]`
     })
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br/>')
 
   const handleClick = (e: React.MouseEvent) => {
     const link = (e.target as HTMLElement).closest('[data-nodeid]')
@@ -302,7 +299,7 @@ function NodeDetailView({ node, onBack, onNavigate }: { node: WikiNode; onBack: 
         </div>
       </div>
 
-      <div className="wiki-body text-gray-800 mb-8" dangerouslySetInnerHTML={{ __html: `<p>${bodyHtml}</p>` }} />
+      <div className="wiki-body text-gray-800 mb-8" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
 
       {(node.relations.length > 0 || node.back_edges.length > 0) && (
         <div className="mb-8">
