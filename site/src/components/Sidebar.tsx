@@ -3,6 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useWikiDataOverride } from '@/lib/WikiDataContext'
+
+function domainToSlugClient(domain: string): string {
+  return btoa(unescape(encodeURIComponent(domain))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
 
 const NAV_ITEMS = [
   { href: '/', label: '首页' },
@@ -14,6 +19,15 @@ const NAV_ITEMS = [
 export function Sidebar({ domains }: { domains: { label: string; slug: string; count: number }[] }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const { overrideData } = useWikiDataOverride()
+
+  const effectiveDomains = overrideData
+    ? Object.keys(overrideData.domainMap).sort().map(d => ({
+        label: d,
+        slug: domainToSlugClient(d),
+        count: overrideData.domainMap[d].length,
+      }))
+    : domains
 
   const content = (
     <div className="px-[18px] py-5">
@@ -41,7 +55,7 @@ export function Sidebar({ domains }: { domains: { label: string; slug: string; c
 
       <div className="text-[11px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--muted)' }}>领域</div>
       <div>
-        {domains.map(({ label, slug, count }) => {
+        {effectiveDomains.map(({ label, slug, count }) => {
           const domainPath = `/domain/${slug}`
           return (
             <Link
