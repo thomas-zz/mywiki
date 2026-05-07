@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { WikiNode, Edge } from '@/lib/types'
-import { useWikiDataOverride } from '@/lib/WikiDataContext'
 
 const META_TYPE_COLORS: Record<string, string> = {
   observation: '#10b981',
@@ -18,7 +17,6 @@ export function LocalGraph({ centerId, nodes, edges }: {
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
-  const { overrideData, navigateTo } = useWikiDataOverride()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -185,12 +183,7 @@ export function LocalGraph({ centerId, nodes, edges }: {
       cy.on('tap', 'node', (evt: any) => {
         const nodeId = evt.target.id()
         if (nodeId !== centerId) {
-          const path = `/node/${nodeId}`
-          if (overrideData) {
-            navigateTo(path)
-          } else {
-            router.push(path)
-          }
+          router.push(`/node/${nodeId}`)
         }
       })
 
@@ -222,7 +215,7 @@ export function LocalGraph({ centerId, nodes, edges }: {
     })
 
     return () => { cy?.destroy() }
-  }, [mounted, centerId, nodes, edges, router, overrideData, navigateTo])
+  }, [mounted, centerId, nodes, edges, router])
 
   return <div ref={containerRef} className="w-full h-[500px] rounded-xl border border-gray-100 bg-stone-50/50" />
 }

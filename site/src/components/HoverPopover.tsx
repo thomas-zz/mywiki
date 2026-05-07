@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect, forwardRef } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import type { WikiNode } from '@/lib/types'
 import { META_TYPE_CONFIG, InsightOriginChip } from './NodeCard'
-import { useWikiDataOverride } from '@/lib/WikiDataContext'
+import { useWikiData } from '@/lib/WikiDataContext'
 
 interface PopoverData {
   node: WikiNode
@@ -12,7 +12,7 @@ interface PopoverData {
   triggerId: string
 }
 
-export function HoverPopoverProvider({ nodes, children }: { nodes: WikiNode[]; children: React.ReactNode }) {
+export function HoverPopoverProvider({ children }: { children: React.ReactNode }) {
   const [popover, setPopover] = useState<PopoverData | null>(null)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const switchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -20,9 +20,9 @@ export function HoverPopoverProvider({ nodes, children }: { nodes: WikiNode[]; c
   const popoverRef = useRef<HTMLDivElement>(null)
   const insidePopover = useRef(false)
   const pathname = usePathname()
-  const { overrideData } = useWikiDataOverride()
+  const data = useWikiData()
 
-  const allNodes = overrideData?.nodes || nodes
+  const allNodes = data.nodes
   if (Object.keys(nodeMap.current).length !== allNodes.length) {
     nodeMap.current = {}
     for (const n of allNodes) nodeMap.current[n.id] = n
@@ -129,9 +129,9 @@ const Popover = forwardRef<HTMLDivElement, {
   const { node, triggerRect } = data
   const cfg = META_TYPE_CONFIG[node.meta_type]
   const snippet = node.body_raw.replace(/\[\[([a-z0-9-]+)\]\]/g, '$1')
-  const { overrideData, clientPath } = useWikiDataOverride()
+  const router = useRouter()
   const pathname = usePathname()
-  const isDetailPage = clientPath.startsWith('/node/') || pathname.startsWith('/node/')
+  const isDetailPage = pathname.startsWith('/node/')
 
   const pw = 360
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
@@ -167,11 +167,7 @@ const Popover = forwardRef<HTMLDivElement, {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     onClose()
-    if (overrideData) {
-      window.dispatchEvent(new CustomEvent('mywiki:navigate', { detail: { nodeId: node.id } }))
-    } else {
-      window.location.href = `/node/${node.id}`
-    }
+    router.push(`/node/${node.id}`)
   }
 
   return (

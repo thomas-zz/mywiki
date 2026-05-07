@@ -54,46 +54,27 @@ async function clearCache(): Promise<void> {
 }
 
 interface WikiDataContextType {
+  serverData: WikiData | null
   overrideData: WikiData | null
   overrideFolderName: string | null
   setOverrideData: (data: WikiData | null, folderName?: string) => void
   clearOverride: () => void
   cacheLoaded: boolean
-  clientPath: string
-  navigateTo: (path: string) => void
 }
 
 const WikiDataContext = createContext<WikiDataContextType>({
+  serverData: null,
   overrideData: null,
   overrideFolderName: null,
   setOverrideData: () => {},
   clearOverride: () => {},
   cacheLoaded: false,
-  clientPath: '/',
-  navigateTo: () => {},
 })
 
-function getHashPath(): string {
-  if (typeof window === 'undefined') return '/'
-  const hash = window.location.hash
-  return hash.startsWith('#') ? hash.slice(1) || '/' : '/'
-}
-
-export function WikiDataProvider({ children }: { children: React.ReactNode }) {
+export function WikiDataProvider({ serverData, children }: { serverData: WikiData; children: React.ReactNode }) {
   const [overrideData, setOverrideDataState] = useState<WikiData | null>(null)
   const [overrideFolderName, setFolderName] = useState<string | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
-  const [clientPath, setClientPath] = useState(getHashPath)
-
-  useEffect(() => {
-    const onHashChange = () => setClientPath(getHashPath())
-    window.addEventListener('hashchange', onHashChange)
-    window.addEventListener('popstate', onHashChange)
-    return () => {
-      window.removeEventListener('hashchange', onHashChange)
-      window.removeEventListener('popstate', onHashChange)
-    }
-  }, [])
 
   useEffect(() => {
     loadFromCache().then((cached) => {
@@ -113,10 +94,6 @@ export function WikiDataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const navigateTo = useCallback((path: string) => {
-    window.location.hash = path
-  }, [])
-
   const clearOverride = useCallback(() => {
     setOverrideDataState(null)
     setFolderName(null)
@@ -124,10 +101,15 @@ export function WikiDataProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <WikiDataContext.Provider value={{ overrideData, overrideFolderName, setOverrideData, clearOverride, cacheLoaded, clientPath, navigateTo }}>
+    <WikiDataContext.Provider value={{ serverData, overrideData, overrideFolderName, setOverrideData, clearOverride, cacheLoaded }}>
       {children}
     </WikiDataContext.Provider>
   )
+}
+
+export function useWikiData(): WikiData {
+  const { serverData, overrideData } = useContext(WikiDataContext)
+  return overrideData ?? serverData!
 }
 
 export function useWikiDataOverride() {
