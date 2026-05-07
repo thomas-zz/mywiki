@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { WikiNode, Edge } from '@/lib/types'
+import { useWikiDataOverride } from '@/lib/WikiDataContext'
 
 const META_TYPE_COLORS: Record<string, string> = {
   observation: '#10b981',
@@ -15,6 +16,7 @@ const META_TYPE_COLORS: Record<string, string> = {
 export function GlobalGraph({ nodes, edges }: { nodes: WikiNode[]; edges: Edge[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const { overrideData, navigateTo } = useWikiDataOverride()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -79,7 +81,12 @@ export function GlobalGraph({ nodes, edges }: { nodes: WikiNode[]; edges: Edge[]
       })
 
       cy.on('tap', 'node', (evt: any) => {
-        router.push(`/node/${evt.target.id()}`)
+        const path = `/node/${evt.target.id()}`
+        if (overrideData) {
+          navigateTo(path)
+        } else {
+          router.push(path)
+        }
       })
 
       cy.on('mouseover', 'node', (evt: any) => {
@@ -94,7 +101,7 @@ export function GlobalGraph({ nodes, edges }: { nodes: WikiNode[]; edges: Edge[]
     })
 
     return () => { cy?.destroy() }
-  }, [mounted, nodes, edges, router])
+  }, [mounted, nodes, edges, router, overrideData, navigateTo])
 
   return <div ref={containerRef} className="w-full h-[calc(100vh-80px)]" />
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useWikiDataOverride } from '@/lib/WikiDataContext'
 import { NodeCard, META_TYPE_CONFIG, MetaTypeChip, StatusBadge } from './NodeCard'
 import { RelationPanel } from './RelationPanel'
@@ -14,20 +14,13 @@ function slugToDomainClient(slug: string): string {
 }
 
 export function ClientOverrideView({ children }: { children: React.ReactNode }) {
-  const { overrideData, cacheLoaded, clientPath } = useWikiDataOverride()
-  const [viewNodeId, setViewNodeId] = useState<string | null>(null)
-
-  const navigate = useCallback((nodeId: string) => setViewNodeId(nodeId), [])
+  const { overrideData, cacheLoaded, clientPath, navigateTo } = useWikiDataOverride()
 
   useEffect(() => {
-    setViewNodeId(null)
-  }, [clientPath])
-
-  useEffect(() => {
-    const handler = (e: Event) => navigate((e as CustomEvent).detail.nodeId)
+    const handler = (e: Event) => navigateTo(`/node/${(e as CustomEvent).detail.nodeId}`)
     window.addEventListener('mywiki:navigate', handler)
     return () => window.removeEventListener('mywiki:navigate', handler)
-  }, [navigate])
+  }, [navigateTo])
 
   const interceptClick = useCallback((e: React.MouseEvent) => {
     if (!overrideData) return
@@ -35,23 +28,14 @@ export function ClientOverrideView({ children }: { children: React.ReactNode }) 
     if (link) {
       e.preventDefault()
       e.stopPropagation()
-      navigate(link.getAttribute('data-nodeid')!)
+      navigateTo(`/node/${link.getAttribute('data-nodeid')!}`)
     }
-  }, [overrideData, navigate])
+  }, [overrideData, navigateTo])
 
   if (!overrideData) return <>{children}</>
   if (!cacheLoaded) return <div className="text-[13px] p-8" style={{ color: 'var(--muted)' }}>加载缓存...</div>
 
-  if (viewNodeId) {
-    const node = overrideData.nodeMap[viewNodeId]
-    if (node) return (
-      <div onClickCapture={interceptClick}>
-        <NodeDetailView node={node} onBack={() => setViewNodeId(null)} onNavigate={navigate} />
-      </div>
-    )
-  }
-
-  const view = getViewForPathname(clientPath, overrideData, navigate)
+  const view = getViewForPathname(clientPath, overrideData, navigateTo)
 
   return (
     <div onClickCapture={interceptClick}>
@@ -60,7 +44,7 @@ export function ClientOverrideView({ children }: { children: React.ReactNode }) 
   )
 }
 
-function getViewForPathname(pathname: string, data: WikiData, onNavigate: (id: string) => void) {
+function getViewForPathname(pathname: string, data: WikiData, navigateTo: (path: string) => void) {
   if (pathname === '/graph') {
     return <OverrideGraphView data={data} />
   }
@@ -73,7 +57,7 @@ function getViewForPathname(pathname: string, data: WikiData, onNavigate: (id: s
   if (pathname.startsWith('/node/')) {
     const nodeId = pathname.replace('/node/', '')
     const node = data.nodeMap[nodeId]
-    if (node) return <NodeDetailView node={node} onBack={() => window.history.back()} onNavigate={onNavigate} />
+    if (node) return <NodeDetailView node={node} onBack={() => window.history.back()} onNavigate={(id) => navigateTo(`/node/${id}`)} />
   }
   if (pathname.startsWith('/domain/')) {
     const slug = pathname.replace('/domain/', '')
