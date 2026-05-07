@@ -1,0 +1,78 @@
+site/src/app/globals.css
+  85e6907344dfd13a 33,36,39-41,43-68
+site/src/components/FolderPicker.tsx
+  85e6907344dfd13a 4-15,18-42,50,55-56,58-63,66-72,75-78,83-86,89,111,179
+site/package.json
+  85e6907344dfd13a 15-17,21
+site/src/components/ClientOverrideView.tsx
+  85e6907344dfd13a 266,302
+site/src/lib/parser.ts
+  85e6907344dfd13a 8,32
+site/src/app/node/[id]/page.tsx
+  85e6907344dfd13a 26
+docs/TECH_DESIGN.md
+  85e6907344dfd13a 355-356,689-692,696-702
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.11",
+  "base_commit_sha": "3f730e66a1e59fef7db790485e7e06a6e9d1dc87",
+  "prompts": {
+    "4c0f883506696edd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c8ea6de-ff12-4551-95d4-df66cc3cbdf2",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 476,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a96468dea398278e95123928016b24e6f5b71c989c308333618a1df19b567635"
+    },
+    "5ec74084f6e62aa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dfdfb-33db-7501-b871-d7183993751e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1002,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/1afd0b3fbc9454bb54f29aba0e4d7240a8adfcabfddd7019b69d000f8a17c21d"
+    },
+    "62ccd07f3936f4b9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1cc82c0b-d96c-4163-b96d-890cdf162ec0",
+        "model": "mimo-v2-pro"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 822,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b72c4859be32ce3d9c545bf1b4dc2e78d51e5c62d5c7ea49cf05bb94b8dae7f9"
+    },
+    "85e6907344dfd13a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3e936d93-a103-4308-bbf2-d0b0804128b0",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 1177,
+      "total_deletions": 52,
+      "accepted_lines": 1127,
+      "overriden_lines": 1,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/edd586c32ff09d1c24b8e5fb8823ad7b5216f52ec0a3a8ca6ce4ca8a98dd9e86"
+    }
+  }
+}
