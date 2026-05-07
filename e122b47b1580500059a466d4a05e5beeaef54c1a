@@ -1,0 +1,52 @@
+site/src/components/HoverPopover.tsx
+  4c0f883506696edd 145-147,150-152,183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.11",
+  "base_commit_sha": "e122b47b1580500059a466d4a05e5beeaef54c1a",
+  "prompts": {
+    "4c0f883506696edd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c8ea6de-ff12-4551-95d4-df66cc3cbdf2",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 218,
+      "total_deletions": 3,
+      "accepted_lines": 487,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a96468dea398278e95123928016b24e6f5b71c989c308333618a1df19b567635"
+    },
+    "5ec74084f6e62aa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dfdfb-33db-7501-b871-d7183993751e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 7,
+      "total_deletions": 3,
+      "accepted_lines": 948,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/c3301c383f5b222c03c77239ff7267a8dfb64649890f6655e8e103eda69f485e"
+    },
+    "62ccd07f3936f4b9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1cc82c0b-d96c-4163-b96d-890cdf162ec0",
+        "model": "mimo-v2-pro"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 834,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b72c4859be32ce3d9c545bf1b4dc2e78d51e5c62d5c7ea49cf05bb94b8dae7f9"
+    }
+  }
+}
