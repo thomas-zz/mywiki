@@ -16,10 +16,41 @@ const NAV_ITEMS = [
   { href: '/all', label: '全部节点' },
 ]
 
+function NavLink({ href, active, onClick, children }: {
+  href: string; active: boolean; onClick?: () => void; children: React.ReactNode
+}) {
+  const { overrideData, navigateTo } = useWikiDataOverride()
+
+  const className = `block px-2 py-1.5 rounded-[5px] text-[13px] my-0.5 transition-colors hover:!bg-stone-100 ${
+    active ? '!bg-amber-200' : ''
+  }`
+
+  if (overrideData) {
+    return (
+      <a
+        href={href}
+        className={className}
+        style={{ borderBottom: 'none', color: 'var(--text)' }}
+        onClick={(e) => { e.preventDefault(); navigateTo(href); onClick?.() }}
+      >
+        {children}
+      </a>
+    )
+  }
+
+  return (
+    <Link href={href} onClick={onClick} className={className} style={{ borderBottom: 'none', color: 'var(--text)' }}>
+      {children}
+    </Link>
+  )
+}
+
 export function Sidebar({ domains }: { domains: { label: string; slug: string; count: number }[] }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const { overrideData } = useWikiDataOverride()
+  const { overrideData, clientPath } = useWikiDataOverride()
+
+  const activePath = overrideData ? clientPath : pathname
 
   const effectiveDomains = overrideData
     ? Object.keys(overrideData.domainMap).sort().map(d => ({
@@ -31,25 +62,22 @@ export function Sidebar({ domains }: { domains: { label: string; slug: string; c
 
   const content = (
     <div className="px-[18px] py-5">
-      <Link href="/" className="block mb-1 hover:!bg-transparent" onClick={() => setOpen(false)}>
+      <NavLink href="/" active={false} onClick={() => setOpen(false)}>
         <h1 className="text-[18px] font-semibold tracking-wide text-gray-900 m-0">myWiki</h1>
-      </Link>
+      </NavLink>
       <p className="text-[12px] mb-6" style={{ color: 'var(--muted)' }}>个人理解的镜子 · 不是博客</p>
 
       <div className="text-[11px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--muted)' }}>视图</div>
       <nav className="mb-4">
         {NAV_ITEMS.map(item => (
-          <Link
+          <NavLink
             key={item.href}
             href={item.href}
+            active={activePath === item.href}
             onClick={() => setOpen(false)}
-            className={`block px-2 py-1.5 rounded-[5px] text-[13px] my-0.5 transition-colors hover:!bg-stone-100 ${
-              pathname === item.href ? '!bg-amber-200' : ''
-            }`}
-            style={{ borderBottom: 'none', color: 'var(--text)' }}
           >
             {item.label}
-          </Link>
+          </NavLink>
         ))}
       </nav>
 
@@ -58,17 +86,14 @@ export function Sidebar({ domains }: { domains: { label: string; slug: string; c
         {effectiveDomains.map(({ label, slug, count }) => {
           const domainPath = `/domain/${slug}`
           return (
-            <Link
+            <NavLink
               key={label}
               href={domainPath}
+              active={activePath === domainPath}
               onClick={() => setOpen(false)}
-              className={`block px-2 py-1 rounded-[5px] text-[13px] my-0.5 transition-colors hover:!bg-stone-100 ${
-                pathname === domainPath ? '!bg-amber-200' : ''
-              }`}
-              style={{ borderBottom: 'none', color: 'var(--text)' }}
             >
               {label} <span className="text-[11px]" style={{ color: 'var(--muted)' }}>{count}</span>
-            </Link>
+            </NavLink>
           )
         })}
       </div>

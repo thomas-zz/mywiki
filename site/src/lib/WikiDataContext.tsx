@@ -59,6 +59,8 @@ interface WikiDataContextType {
   setOverrideData: (data: WikiData | null, folderName?: string) => void
   clearOverride: () => void
   cacheLoaded: boolean
+  clientPath: string
+  navigateTo: (path: string) => void
 }
 
 const WikiDataContext = createContext<WikiDataContextType>({
@@ -67,12 +69,23 @@ const WikiDataContext = createContext<WikiDataContextType>({
   setOverrideData: () => {},
   clearOverride: () => {},
   cacheLoaded: false,
+  clientPath: '/',
+  navigateTo: () => {},
 })
 
 export function WikiDataProvider({ children }: { children: React.ReactNode }) {
   const [overrideData, setOverrideDataState] = useState<WikiData | null>(null)
   const [overrideFolderName, setFolderName] = useState<string | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
+  const [clientPath, setClientPath] = useState(() =>
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  )
+
+  useEffect(() => {
+    const onPopState = () => setClientPath(window.location.pathname)
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   useEffect(() => {
     loadFromCache().then((cached) => {
@@ -92,6 +105,11 @@ export function WikiDataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const navigateTo = useCallback((path: string) => {
+    window.history.pushState(null, '', path)
+    setClientPath(path)
+  }, [])
+
   const clearOverride = useCallback(() => {
     setOverrideDataState(null)
     setFolderName(null)
@@ -99,7 +117,7 @@ export function WikiDataProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <WikiDataContext.Provider value={{ overrideData, overrideFolderName, setOverrideData, clearOverride, cacheLoaded }}>
+    <WikiDataContext.Provider value={{ overrideData, overrideFolderName, setOverrideData, clearOverride, cacheLoaded, clientPath, navigateTo }}>
       {children}
     </WikiDataContext.Provider>
   )

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { usePathname } from 'next/navigation'
 import { useWikiDataOverride } from '@/lib/WikiDataContext'
 import { NodeCard, META_TYPE_CONFIG, MetaTypeChip, StatusBadge } from './NodeCard'
 import { RelationPanel } from './RelationPanel'
@@ -15,15 +14,14 @@ function slugToDomainClient(slug: string): string {
 }
 
 export function ClientOverrideView({ children }: { children: React.ReactNode }) {
-  const { overrideData, cacheLoaded } = useWikiDataOverride()
-  const pathname = usePathname()
+  const { overrideData, cacheLoaded, clientPath } = useWikiDataOverride()
   const [viewNodeId, setViewNodeId] = useState<string | null>(null)
 
   const navigate = useCallback((nodeId: string) => setViewNodeId(nodeId), [])
 
   useEffect(() => {
     setViewNodeId(null)
-  }, [pathname])
+  }, [clientPath])
 
   useEffect(() => {
     const handler = (e: Event) => navigate((e as CustomEvent).detail.nodeId)
@@ -53,7 +51,7 @@ export function ClientOverrideView({ children }: { children: React.ReactNode }) 
     )
   }
 
-  const view = getViewForPathname(pathname, overrideData, navigate)
+  const view = getViewForPathname(clientPath, overrideData, navigate)
 
   return (
     <div onClickCapture={interceptClick}>
