@@ -3,7 +3,7 @@ import type { MetaType, NodeStatus } from '@/lib/types'
 
 const META_TYPE_CONFIG: Record<MetaType, { label: string; icon: string; color: string; chipBg: string }> = {
   observation: { label: '事实', icon: '👁', color: '#94a3b8', chipBg: 'background:#94a3b8' },
-  model: { label: '洞见', icon: '💡', color: '#6366f1', chipBg: 'background:#6366f1' },
+  insight: { label: '洞见', icon: '💡', color: '#6366f1', chipBg: 'background:#6366f1' },
   decision: { label: '主张', icon: '🎯', color: '#f59e0b', chipBg: 'background:#f59e0b' },
   question: { label: '疑问', icon: '❓', color: '#ef4444', chipBg: 'background:#ef4444' },
   comparison: { label: '辨析', icon: '⚖️', color: '#10b981', chipBg: 'background:#10b981' },
@@ -38,10 +38,12 @@ export function NodeCard({ id, title, meta_type, status, domains, subtitle }: {
 }) {
   return (
     <Link href={`/node/${id}`} data-nodeid={id} className="block py-2 border-b border-gray-100 last:border-0 hover:bg-stone-50 transition-colors -mx-2 px-2 rounded">
-      <div className="flex items-center gap-1.5">
-        <span className="text-[13px] font-medium text-gray-900 hover:underline">{title}</span>
-        <MetaTypeChip type={meta_type} />
-        <StatusBadge status={status} />
+      <div className="flex items-start gap-1.5">
+        <span className="text-[13px] font-medium text-gray-900 hover:underline flex-1 min-w-0">{title}</span>
+        <span className="flex items-center gap-1 flex-shrink-0">
+          <MetaTypeChip type={meta_type} />
+          <StatusBadge status={status} />
+        </span>
       </div>
       {subtitle && <div className="text-[11px] text-gray-400 mt-0.5">{subtitle}</div>}
       {!subtitle && domains.length > 0 && (

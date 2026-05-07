@@ -2,7 +2,7 @@
 id: tcp-head-of-line-blocking
 title: "TCP 队头阻塞的成因链"
 wiki: "前端学习"
-meta_type: model
+meta_type: insight
 domains: ["#技术/网络"]
 status: mature
 created: 2026-01-19

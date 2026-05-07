@@ -2,7 +2,7 @@
 id: interruptible-rendering
 title: "可中断渲染（interruptible rendering）"
 wiki: "前端学习"
-meta_type: model
+meta_type: insight
 domains: ["#技术/前端"]
 status: mature
 created: 2026-04-15

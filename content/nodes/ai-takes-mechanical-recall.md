@@ -2,7 +2,7 @@
 id: ai-takes-mechanical-recall
 title: "AI 接走机械记忆，人留住理解"
 wiki: "个人成长"
-meta_type: model
+meta_type: insight
 domains: ["#思考", "#技术/AI"]
 status: growing
 created: 2026-05-03

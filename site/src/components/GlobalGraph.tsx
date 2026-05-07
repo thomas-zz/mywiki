@@ -6,7 +6,7 @@ import type { WikiNode, Edge } from '@/lib/types'
 
 const META_TYPE_COLORS: Record<string, string> = {
   observation: '#10b981',
-  model: '#3b82f6',
+  insight: '#3b82f6',
   decision: '#8b5cf6',
   question: '#f59e0b',
   comparison: '#f43f5e',

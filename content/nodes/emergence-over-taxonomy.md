@@ -2,7 +2,7 @@
 id: emergence-over-taxonomy
 title: "涌现优于分类"
 wiki: "个人成长"
-meta_type: model
+meta_type: insight
 domains: ["#思考"]
 status: growing
 created: 2026-05-01

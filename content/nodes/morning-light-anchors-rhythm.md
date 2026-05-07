@@ -2,7 +2,7 @@
 id: morning-light-anchors-rhythm
 title: "早晨日光是生物钟的锚"
 wiki: "个人成长"
-meta_type: model
+meta_type: insight
 domains: ["#生活/健康"]
 status: mature
 created: 2026-02-15

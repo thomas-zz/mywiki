@@ -2,7 +2,7 @@
 id: delayed-gratification
 title: "延迟满足并不是「忍」"
 wiki: "个人成长"
-meta_type: model
+meta_type: insight
 domains: ["#生活/育儿", "#自我管理", "#思考"]
 status: growing
 created: 2026-03-12

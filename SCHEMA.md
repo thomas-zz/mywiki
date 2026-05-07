@@ -17,7 +17,7 @@
 id: tcp-head-of-line-blocking
 title: TCP 队头阻塞的成因链
 wiki: 前端学习                   # 物理 wiki，私密 wiki 网站层可隐藏
-meta_type: model                 # 五种通用元类型，见下
+meta_type: insight                 # 五种通用元类型，见下
 domains: ["#技术/网络", "#思考"]   # 自由领域标签，可多打
 status: mature                   # seed | growing | mature | needs-split | archived
 created: 2026-01-19

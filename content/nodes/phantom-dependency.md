@@ -2,7 +2,7 @@
 id: phantom-dependency
 title: "幽灵依赖（phantom dependency）"
 wiki: "前端学习"
-meta_type: model
+meta_type: insight
 domains: ["#技术/工程"]
 status: mature
 created: 2026-03-05

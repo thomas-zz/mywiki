@@ -2,7 +2,7 @@
 id: wiki-vs-blog
 title: "wiki 不是博客"
 wiki: "个人成长"
-meta_type: model
+meta_type: insight
 domains: ["#思考", "#工作/职业"]
 status: growing
 created: 2026-04-29

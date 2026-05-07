@@ -1,4 +1,4 @@
-export type MetaType = 'observation' | 'model' | 'decision' | 'question' | 'comparison'
+export type MetaType = 'observation' | 'insight' | 'decision' | 'question' | 'comparison'
 export type NodeStatus = 'seed' | 'growing' | 'mature' | 'needs-split' | 'archived'
 
 export interface WikiSource {

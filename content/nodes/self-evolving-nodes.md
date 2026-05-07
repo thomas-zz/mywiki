@@ -2,7 +2,7 @@
 id: self-evolving-nodes
 title: "节点会自我进化"
 wiki: "个人成长"
-meta_type: model
+meta_type: insight
 domains: ["#思考"]
 status: growing
 created: 2026-05-01
