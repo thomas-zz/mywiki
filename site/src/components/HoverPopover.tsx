@@ -142,11 +142,14 @@ const Popover = forwardRef<HTMLDivElement, {
   const maxH = Math.min(vh - 32, 380)
 
   if (isDetailPage) {
-    left = Math.round(vw * 0.55 - pw / 2)
+    // Show above trigger, horizontally centered on trigger
+    const triggerCenterX = (triggerRect.left + triggerRect.right) / 2
+    left = Math.round(triggerCenterX - pw / 2)
     if (left + pw > vw - 8) left = vw - pw - 8
     if (left < 8) left = 8
-    top = Math.max(8, triggerRect.top - maxH - 12)
-    if (top < 8) top = 8
+    // Bottom of popover sits just above the trigger
+    top = triggerRect.top - 8
+    // Will use `bottom` positioning via transform instead
   } else {
     const spaceRight = vw - triggerRect.right - 12
     const spaceLeft = triggerRect.left - 12
@@ -177,6 +180,7 @@ const Popover = forwardRef<HTMLDivElement, {
         maxHeight: maxH,
         border: '1px solid var(--border)',
         animation: 'fadeIn 0.12s ease',
+        ...(isDetailPage ? { transform: 'translateY(-100%)' } : {}),
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
