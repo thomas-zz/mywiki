@@ -1,0 +1,64 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.11",
+  "base_commit_sha": "472a3fe8f042028f0229dcf946381aa89f2f485d",
+  "prompts": {
+    "4c0f883506696edd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c8ea6de-ff12-4551-95d4-df66cc3cbdf2",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 387,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a96468dea398278e95123928016b24e6f5b71c989c308333618a1df19b567635"
+    },
+    "5ec74084f6e62aa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dfdfb-33db-7501-b871-d7183993751e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 823,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/1afd0b3fbc9454bb54f29aba0e4d7240a8adfcabfddd7019b69d000f8a17c21d"
+    },
+    "62ccd07f3936f4b9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1cc82c0b-d96c-4163-b96d-890cdf162ec0",
+        "model": "mimo-v2-pro"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 670,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b72c4859be32ce3d9c545bf1b4dc2e78d51e5c62d5c7ea49cf05bb94b8dae7f9"
+    },
+    "85e6907344dfd13a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3e936d93-a103-4308-bbf2-d0b0804128b0",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 20,
+      "accepted_lines": 1544,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a5febc01aa0f29f4467f4c979d85005a7972544cf43ba901013039b1d545a462"
+    }
+  }
+}
