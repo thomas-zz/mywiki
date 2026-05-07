@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { WikiRelation, BackEdge, WikiNode } from '@/lib/types'
-import { MetaTypeChip, StatusBadge } from './NodeCard'
+import { MetaTypeChip, StatusBadge, InsightOriginChip } from './NodeCard'
 
 function RelationTypeChip({ type, direction }: { type: string; direction: 'out' | 'in' }) {
   const color = direction === 'out' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -24,6 +24,7 @@ export function RelationPanel({ relations, backEdges, nodeMap }: {
                   <RelationTypeChip type={rel.type} direction="out" />
                   <span className="font-medium text-gray-900 text-sm">{target.title}</span>
                   <MetaTypeChip type={target.meta_type} />
+                  {target.meta_type === 'insight' && <InsightOriginChip origin={target.insight_origin} />}
                   <StatusBadge status={target.status} />
                   {rel.note && <span className="text-xs text-gray-400 italic ml-auto">{rel.note}</span>}
                 </Link>
@@ -44,6 +45,7 @@ export function RelationPanel({ relations, backEdges, nodeMap }: {
                   <RelationTypeChip type={edge.type} direction="in" />
                   <span className="font-medium text-gray-900 text-sm">{source.title}</span>
                   <MetaTypeChip type={source.meta_type} />
+                  {source.meta_type === 'insight' && <InsightOriginChip origin={source.insight_origin} />}
                   <StatusBadge status={source.status} />
                   {edge.note && <span className="text-xs text-gray-400 italic ml-auto">{edge.note}</span>}
                 </Link>

@@ -1,5 +1,5 @@
 import { buildWikiData } from '@/lib/parser'
-import { MetaTypeChip, StatusBadge } from '@/components/NodeCard'
+import { MetaTypeChip, StatusBadge, InsightOriginChip } from '@/components/NodeCard'
 import { RelationPanel } from '@/components/RelationPanel'
 import { LocalGraph } from '@/components/LocalGraph'
 import { BackBar } from '@/components/BackBar'
@@ -34,6 +34,7 @@ export default async function NodePage({ params }: { params: Promise<{ id: strin
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <MetaTypeChip type={node.meta_type} />
+          {node.meta_type === 'insight' && <InsightOriginChip origin={node.insight_origin} />}
           <StatusBadge status={node.status} />
           <span className="text-xs text-gray-400">入链 {node.metrics.in_degree} · 出链 {node.metrics.out_degree}</span>
         </div>

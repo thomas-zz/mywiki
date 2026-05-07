@@ -5,9 +5,15 @@ import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
-import type { WikiNode, Edge, Emergence, WikiData, MetaType, NodeStatus } from './types'
+import type { WikiNode, Edge, Emergence, WikiData, MetaType, NodeStatus, InsightOrigin } from './types'
 
 const WIKILINK_RE = /\[\[([a-z0-9-]+)\]\]/g
+
+function normalizeInsightOrigin(value: unknown): InsightOrigin | undefined {
+  if (typeof value !== 'string') return undefined
+  const origin = value.toLowerCase() as InsightOrigin
+  return origin === 'explicit' || origin === 'inferred' || origin === 'mixed' ? origin : undefined
+}
 
 function getWikiDir(): string {
   const envDir = process.env.WIKI_DIR
@@ -67,6 +73,7 @@ export async function buildWikiData(): Promise<WikiData> {
       id: fm.id,
       title: fm.title,
       meta_type: fm.meta_type as MetaType,
+      insight_origin: normalizeInsightOrigin(fm.insight_origin),
       domains: fm.domains || [],
       status: fm.status as NodeStatus,
       created: fm.created instanceof Date ? fm.created.toISOString().slice(0, 10) : String(fm.created),

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { WikiNode } from '@/lib/types'
-import { MetaTypeChip } from './NodeCard'
+import { MetaTypeChip, InsightOriginChip } from './NodeCard'
 import { useWikiDataOverride } from '@/lib/WikiDataContext'
 
 export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
@@ -55,6 +55,7 @@ export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
               onClick={(e) => { e.preventDefault(); handleSelect(n.id) }}
             >
               <MetaTypeChip type={n.meta_type} />
+              {n.meta_type === 'insight' && <InsightOriginChip origin={n.insight_origin} />}
               <span className="text-gray-900">{n.title}</span>
             </a>
           ) : (
@@ -66,6 +67,7 @@ export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
               onClick={() => handleSelect(n.id)}
             >
               <MetaTypeChip type={n.meta_type} />
+              {n.meta_type === 'insight' && <InsightOriginChip origin={n.insight_origin} />}
               <span className="text-gray-900">{n.title}</span>
             </Link>
           ))}

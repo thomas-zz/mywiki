@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, forwardRef } from 'react'
 import { usePathname } from 'next/navigation'
 import type { WikiNode } from '@/lib/types'
-import { META_TYPE_CONFIG } from './NodeCard'
+import { META_TYPE_CONFIG, InsightOriginChip } from './NodeCard'
 import { useWikiDataOverride } from '@/lib/WikiDataContext'
 
 interface PopoverData {
@@ -141,18 +141,22 @@ const Popover = forwardRef<HTMLDivElement, {
   let top: number
   const maxH = Math.min(vh - 32, 380)
 
-  if (isDetailPage) {
-    // Show above trigger, horizontally centered on trigger
+  const spaceRight = vw - triggerRect.right - 12
+  const spaceLeft = triggerRect.left - 12
+  const canShowHorizontal = spaceRight >= pw || spaceLeft >= pw
+
+  let useBottom = false
+  let bottom = 0
+
+  if (isDetailPage && !canShowHorizontal) {
     const triggerCenterX = (triggerRect.left + triggerRect.right) / 2
     left = Math.round(triggerCenterX - pw / 2)
     if (left + pw > vw - 8) left = vw - pw - 8
     if (left < 8) left = 8
-    // Bottom of popover sits just above the trigger
-    top = triggerRect.top - 8
-    // Will use `bottom` positioning via transform instead
+    bottom = vh - triggerRect.top + 8
+    top = 0
+    useBottom = true
   } else {
-    const spaceRight = vw - triggerRect.right - 12
-    const spaceLeft = triggerRect.left - 12
     const showRight = spaceRight >= pw || spaceRight >= spaceLeft
     left = showRight ? triggerRect.right + 8 : triggerRect.left - pw - 8
     if (left + pw > vw - 8) left = vw - pw - 8
@@ -176,11 +180,10 @@ const Popover = forwardRef<HTMLDivElement, {
       className="fixed z-[100] w-[360px] max-w-[90vw] bg-white rounded-[10px] shadow-xl p-3.5 flex flex-col"
       style={{
         left,
-        top,
+        ...(useBottom ? { bottom } : { top }),
         maxHeight: maxH,
         border: '1px solid var(--border)',
         animation: 'fadeIn 0.12s ease',
-        ...(isDetailPage ? { transform: 'translateY(-100%)' } : {}),
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -190,9 +193,11 @@ const Popover = forwardRef<HTMLDivElement, {
         <span className="w-[10px] h-[10px] rounded-full inline-block" style={{ background: cfg.color }} />
         {node.title}
       </div>
-      <div className="text-[11px] mb-2 flex-shrink-0" style={{ color: 'var(--muted)' }}>
-        {cfg.icon} {cfg.label} · {node.status} · ←{node.metrics.in_degree} / →{node.metrics.out_degree}
-        {node.domains.length > 0 && ` · ${node.domains.join(' ')}`}
+      <div className="text-[11px] mb-2 flex flex-wrap items-center gap-1.5 flex-shrink-0" style={{ color: 'var(--muted)' }}>
+        <span>{cfg.icon} {cfg.label}</span>
+        {node.meta_type === 'insight' && <InsightOriginChip origin={node.insight_origin} />}
+        <span>· {node.status} · ←{node.metrics.in_degree} / →{node.metrics.out_degree}</span>
+        {node.domains.length > 0 && <span>· {node.domains.join(' ')}</span>}
       </div>
       <div className="text-[13px] leading-relaxed overflow-y-auto flex-1 min-h-0" style={{ color: '#334155', overscrollBehavior: 'contain' }}>
         {snippet}

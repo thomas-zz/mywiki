@@ -1,5 +1,6 @@
 export type MetaType = 'observation' | 'insight' | 'decision' | 'question' | 'comparison'
 export type NodeStatus = 'seed' | 'growing' | 'mature' | 'needs-split' | 'archived'
+export type InsightOrigin = 'explicit' | 'inferred' | 'mixed'
 
 export interface WikiSource {
   title: string
@@ -23,6 +24,7 @@ export interface WikiNode {
   id: string
   title: string
   meta_type: MetaType
+  insight_origin?: InsightOrigin
   domains: string[]
   status: NodeStatus
   created: string

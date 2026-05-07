@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from 'react'
 import { useWikiDataOverride } from '@/lib/WikiDataContext'
-import { NodeCard, META_TYPE_CONFIG, MetaTypeChip, StatusBadge } from './NodeCard'
+import { NodeCard, META_TYPE_CONFIG, MetaTypeChip, StatusBadge, InsightOriginChip } from './NodeCard'
 import { RelationPanel } from './RelationPanel'
 import { LocalGraph } from './LocalGraph'
 import { GlobalGraph } from './GlobalGraph'
@@ -152,6 +152,7 @@ function OverrideAllNodesView({ data }: { data: WikiData }) {
                   <div key={n.id} className="py-1 text-[13px]">
                     <a href="#" data-nodeid={n.id} className="wiki-link" style={{ borderBottom: 'none' }}>{n.title}</a>
                     {' '}<StatusBadge status={n.status} />
+                    {n.meta_type === 'insight' && <span className="ml-1"><InsightOriginChip origin={n.insight_origin} /></span>}
                     <span className="text-[11px] ml-1.5" style={{ color: 'var(--muted)' }}>{n.domains.join(' ')}</span>
                   </div>
                 ))}
@@ -172,6 +173,7 @@ function OverrideAllNodesView({ data }: { data: WikiData }) {
                   <div key={n.id} className="py-1 text-[13px]">
                     <a href="#" data-nodeid={n.id} className="wiki-link" style={{ borderBottom: 'none' }}>{n.title}</a>
                     {' '}<MetaTypeChip type={n.meta_type} />
+                    {n.meta_type === 'insight' && <span className="ml-1"><InsightOriginChip origin={n.insight_origin} /></span>}
                     <span className="text-[11px] ml-1.5" style={{ color: 'var(--muted)' }}>{n.domains.join(' ')}</span>
                   </div>
                 ))}
@@ -286,6 +288,7 @@ function NodeDetailView({ node, onBack, onNavigate }: { node: WikiNode; onBack: 
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <MetaTypeChip type={node.meta_type} />
+          {node.meta_type === 'insight' && <InsightOriginChip origin={node.insight_origin} />}
           <StatusBadge status={node.status} />
           <span className="text-[12px]" style={{ color: 'var(--muted)' }}>入链 {node.metrics.in_degree} · 出链 {node.metrics.out_degree}</span>
         </div>

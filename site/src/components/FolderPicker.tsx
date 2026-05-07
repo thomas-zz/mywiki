@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import type { WikiNode, WikiData, Edge, Emergence, MetaType, NodeStatus } from '@/lib/types'
+import type { WikiNode, WikiData, Edge, Emergence, MetaType, NodeStatus, InsightOrigin } from '@/lib/types'
 
 function parseFrontmatter(text: string): { data: Record<string, any>; content: string } {
   const match = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
@@ -66,6 +66,12 @@ function parseFrontmatter(text: string): { data: Record<string, any>; content: s
   return { data, content }
 }
 
+function normalizeInsightOrigin(value: unknown): InsightOrigin | undefined {
+  if (typeof value !== 'string') return undefined
+  const origin = value.toLowerCase() as InsightOrigin
+  return origin === 'explicit' || origin === 'inferred' || origin === 'mixed' ? origin : undefined
+}
+
 export function FolderPicker({ onDataLoaded }: { onDataLoaded: (data: WikiData, folderName: string) => void }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -112,6 +118,7 @@ export function FolderPicker({ onDataLoaded }: { onDataLoaded: (data: WikiData, 
           id: fm.id || entry.name.replace('.md', ''),
           title: fm.title || entry.name.replace('.md', ''),
           meta_type: (fm.meta_type || 'insight') as MetaType,
+          insight_origin: normalizeInsightOrigin(fm.insight_origin),
           domains: fm.domains || [],
           status: (fm.status || 'seed') as NodeStatus,
           created: String(fm.created || ''),

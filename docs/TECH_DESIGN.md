@@ -105,6 +105,7 @@ repo-root/
 id: tcp-head-of-line-blocking          # 唯一标识，与文件名一致
 title: TCP 队头阻塞的成因链              # 展示标题（中文为主）
 meta_type: insight                      # observation | insight | decision | question | comparison
+insight_origin: explicit                # explicit | inferred | mixed（仅 insight 节点建议填写）
 domains:                                # 领域标签数组，至少一个
   - "#技术/网络"
 status: mature                          # seed | growing | mature | needs-split | archived
@@ -144,6 +145,8 @@ splits_into: []                          # 自进化：被拆成了哪些节点
 构建时（CI 中）校验每个节点文件：
 - `id` 与文件名一致
 - `meta_type` 在五种之一
+- `meta_type = insight` 时建议填写 `insight_origin`
+- `insight_origin` 在允许值之一（仅 insight 节点使用）
 - `status` 在允许值之一
 - `domains` 非空数组
 - `created` / `updated` 是合法日期
@@ -218,6 +221,7 @@ interface WikiNode {
   id: string
   title: string
   meta_type: 'observation' | 'insight' | 'decision' | 'question' | 'comparison'
+  insight_origin?: 'explicit' | 'inferred' | 'mixed'
   domains: string[]
   status: 'seed' | 'growing' | 'mature' | 'needs-split' | 'archived'
   created: string

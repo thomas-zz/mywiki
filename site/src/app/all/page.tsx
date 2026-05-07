@@ -1,7 +1,7 @@
 import { buildWikiData } from '@/lib/parser'
 import { BackBar } from '@/components/BackBar'
 import { META_TYPE_CONFIG } from '@/components/NodeCard'
-import { MetaTypeChip, StatusBadge } from '@/components/NodeCard'
+import { MetaTypeChip, StatusBadge, InsightOriginChip } from '@/components/NodeCard'
 import type { MetaType, NodeStatus } from '@/lib/types'
 import Link from 'next/link'
 
@@ -53,6 +53,7 @@ export default async function AllNodesPage() {
                   <div key={n.id} className="py-1 text-[13px]">
                     <Link href={`/node/${n.id}`} style={{ borderBottom: 'none' }}>{n.title}</Link>
                     {' '}<StatusBadge status={n.status} />
+                    {n.meta_type === 'insight' && <span className="ml-1"><InsightOriginChip origin={n.insight_origin} /></span>}
                     <span className="text-[11px] ml-1.5" style={{ color: 'var(--muted)' }}>{n.domains.join(' ')}</span>
                   </div>
                 ))}
@@ -74,6 +75,7 @@ export default async function AllNodesPage() {
                   <div key={n.id} className="py-1 text-[13px]">
                     <Link href={`/node/${n.id}`} style={{ borderBottom: 'none' }}>{n.title}</Link>
                     {' '}<MetaTypeChip type={n.meta_type} />
+                    {n.meta_type === 'insight' && <span className="ml-1"><InsightOriginChip origin={n.insight_origin} /></span>}
                     <span className="text-[11px] ml-1.5" style={{ color: 'var(--muted)' }}>{n.domains.join(' ')}</span>
                   </div>
                 ))}
