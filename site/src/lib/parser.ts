@@ -9,13 +9,13 @@ import type { WikiNode, Edge, Emergence, WikiData, MetaType, NodeStatus } from '
 
 const WIKILINK_RE = /\[\[([a-z0-9-]+)\]\]/g
 
-function getContentDir(): string {
-  const envDir = process.env.CONTENT_DIR
+function getWikiDir(): string {
+  const envDir = process.env.WIKI_DIR
   if (envDir) {
     const resolved = path.isAbsolute(envDir) ? envDir : path.join(process.cwd(), '..', envDir)
     return path.join(resolved, 'nodes')
   }
-  return path.join(process.cwd(), '..', 'content', 'nodes')
+  return path.join(process.cwd(), '..', 'myWiki', 'nodes')
 }
 
 async function renderMarkdown(content: string): Promise<string> {
@@ -52,7 +52,7 @@ function computeEmergence(nodes: WikiNode[]): Emergence {
 }
 
 export async function buildWikiData(): Promise<WikiData> {
-  const nodesDir = getContentDir()
+  const nodesDir = getWikiDir()
   const files = fs.readdirSync(nodesDir).filter(f => f.endsWith('.md'))
   const nodeMap = new Map<string, WikiNode>()
 

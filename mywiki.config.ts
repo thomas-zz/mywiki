@@ -1,7 +1,7 @@
 import { defineConfig } from './site/src/lib/config'
 
 export default defineConfig({
-  contentDir: './content',
+  wikiDir: './myWiki',
   site: {
     title: 'myWiki',
     tagline: '个人理解的镜子',

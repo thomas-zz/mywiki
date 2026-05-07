@@ -1,5 +1,5 @@
 export interface WikiConfig {
-  contentDir: string
+  wikiDir: string
   site: {
     title: string
     tagline: string
