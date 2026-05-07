@@ -31,11 +31,28 @@ export function LocalGraph({ centerId, nodes, edges }: {
     import('cytoscape').then(({ default: cytoscape }) => {
       if (!containerRef.current) return
 
+      // BFS: find all nodes reachable from center (any direction), track distance
       const neighborIds = new Set<string>()
+      const distanceMap = new Map<string, number>()
+      const queue: [string, number][] = [[centerId, 0]]
       neighborIds.add(centerId)
+      distanceMap.set(centerId, 0)
+      const adjacency = new Map<string, string[]>()
       for (const e of edges) {
-        if (e.source === centerId) neighborIds.add(e.target)
-        if (e.target === centerId) neighborIds.add(e.source)
+        if (!adjacency.has(e.source)) adjacency.set(e.source, [])
+        if (!adjacency.has(e.target)) adjacency.set(e.target, [])
+        adjacency.get(e.source)!.push(e.target)
+        adjacency.get(e.target)!.push(e.source)
+      }
+      while (queue.length > 0) {
+        const [current, dist] = queue.shift()!
+        for (const neighbor of (adjacency.get(current) || [])) {
+          if (!neighborIds.has(neighbor)) {
+            neighborIds.add(neighbor)
+            distanceMap.set(neighbor, dist + 1)
+            queue.push([neighbor, dist + 1])
+          }
+        }
       }
 
       // Also include edges between neighbors (not just center↔neighbor)
@@ -51,6 +68,7 @@ export function LocalGraph({ centerId, nodes, edges }: {
             isCenter: n.id === centerId,
             metaType: n.meta_type,
             degree,
+            dist: distanceMap.get(n.id) || 0,
           },
         }
       })
@@ -76,7 +94,7 @@ export function LocalGraph({ centerId, nodes, edges }: {
             selector: 'node',
             style: {
               'background-color': (ele: any) => META_TYPE_COLORS[ele.data('metaType')] || '#6b7280',
-              'background-opacity': 0.85,
+              'background-opacity': (ele: any) => Math.max(0.4, 0.9 - ele.data('dist') * 0.15),
               'label': 'data(label)',
               'font-size': '10px',
               'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -147,15 +165,15 @@ export function LocalGraph({ centerId, nodes, edges }: {
         ] as any,
         layout: {
           name: 'cose',
-          idealEdgeLength: () => neighborCount <= 4 ? 160 : 120,
+          idealEdgeLength: () => neighborCount <= 6 ? 140 : neighborCount <= 15 ? 100 : 80,
           nodeOverlap: 20,
-          padding: 50,
+          padding: 40,
           randomize: false,
-          componentSpacing: 80,
-          nodeRepulsion: () => neighborCount <= 4 ? 12000 : 6000,
+          componentSpacing: 60,
+          nodeRepulsion: () => neighborCount <= 6 ? 12000 : neighborCount <= 15 ? 8000 : 5000,
           edgeElasticity: () => 80,
-          gravity: 0.3,
-          numIter: 500,
+          gravity: neighborCount <= 6 ? 0.3 : 0.5,
+          numIter: 800,
         } as any,
         userZoomingEnabled: true,
         userPanningEnabled: true,
@@ -206,5 +224,5 @@ export function LocalGraph({ centerId, nodes, edges }: {
     return () => { cy?.destroy() }
   }, [mounted, centerId, nodes, edges, router, overrideData, navigateTo])
 
-  return <div ref={containerRef} className="w-full h-[400px] rounded-xl border border-gray-100 bg-stone-50/50" />
+  return <div ref={containerRef} className="w-full h-[500px] rounded-xl border border-gray-100 bg-stone-50/50" />
 }
