@@ -73,18 +73,26 @@ const WikiDataContext = createContext<WikiDataContextType>({
   navigateTo: () => {},
 })
 
+function getHashPath(): string {
+  if (typeof window === 'undefined') return '/'
+  const hash = window.location.hash
+  return hash.startsWith('#') ? hash.slice(1) || '/' : '/'
+}
+
 export function WikiDataProvider({ children }: { children: React.ReactNode }) {
   const [overrideData, setOverrideDataState] = useState<WikiData | null>(null)
   const [overrideFolderName, setFolderName] = useState<string | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
-  const [clientPath, setClientPath] = useState(() =>
-    typeof window !== 'undefined' ? window.location.pathname : '/'
-  )
+  const [clientPath, setClientPath] = useState(getHashPath)
 
   useEffect(() => {
-    const onPopState = () => setClientPath(window.location.pathname)
-    window.addEventListener('popstate', onPopState)
-    return () => window.removeEventListener('popstate', onPopState)
+    const onHashChange = () => setClientPath(getHashPath())
+    window.addEventListener('hashchange', onHashChange)
+    window.addEventListener('popstate', onHashChange)
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+      window.removeEventListener('popstate', onHashChange)
+    }
   }, [])
 
   useEffect(() => {
@@ -106,8 +114,7 @@ export function WikiDataProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const navigateTo = useCallback((path: string) => {
-    window.history.pushState(null, '', path)
-    setClientPath(path)
+    window.location.hash = path
   }, [])
 
   const clearOverride = useCallback(() => {

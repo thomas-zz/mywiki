@@ -28,10 +28,10 @@ function NavLink({ href, active, onClick, children }: {
   if (overrideData) {
     return (
       <a
-        href={href}
+        href={`#${href}`}
         className={className}
         style={{ borderBottom: 'none', color: 'var(--text)' }}
-        onClick={(e) => { e.preventDefault(); navigateTo(href); onClick?.() }}
+        onClick={() => onClick?.()}
       >
         {children}
       </a>
