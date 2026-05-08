@@ -61,7 +61,14 @@ function computeEmergence(nodes: WikiNode[]): Emergence {
 
 export async function buildWikiData(): Promise<WikiData> {
   const nodesDir = getWikiDir()
-  const files = fs.readdirSync(nodesDir).filter(f => f.endsWith('.md'))
+
+  let files: string[] = []
+  try {
+    files = fs.readdirSync(nodesDir).filter(f => f.endsWith('.md'))
+  } catch {
+    console.warn(`[buildWikiData] 节点目录不存在: ${nodesDir}，返回空数据`)
+    return { nodes: [], edges: [], emergence: computeEmergence([]), nodeMap: {}, domainMap: {} }
+  }
   const nodeMap = new Map<string, WikiNode>()
 
   for (const file of files) {
