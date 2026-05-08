@@ -12,9 +12,16 @@ const META_TYPE_COLORS: Record<string, string> = {
   comparison: '#f43f5e',
 }
 
-export function LocalGraph({ centerId, nodes, edges }: {
-  centerId: string; nodes: WikiNode[]; edges: Edge[]
-}) {
+const MAX_BFS_DEPTH = 3
+
+interface WikiGraphProps {
+  nodes: WikiNode[]
+  edges: Edge[]
+  mode: 'local' | 'global'
+  centerId?: string
+}
+
+export function WikiGraph({ nodes, edges, mode, centerId }: WikiGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
@@ -23,47 +30,55 @@ export function LocalGraph({ centerId, nodes, edges }: {
 
   useEffect(() => {
     if (!mounted || !containerRef.current) return
-
     let cy: any = null
 
     import('cytoscape').then(({ default: cytoscape }) => {
       if (!containerRef.current) return
 
-      // BFS: find all nodes reachable from center (any direction), track distance
-      const neighborIds = new Set<string>()
-      const distanceMap = new Map<string, number>()
-      const queue: [string, number][] = [[centerId, 0]]
-      neighborIds.add(centerId)
-      distanceMap.set(centerId, 0)
-      const adjacency = new Map<string, string[]>()
-      for (const e of edges) {
-        if (!adjacency.has(e.source)) adjacency.set(e.source, [])
-        if (!adjacency.has(e.target)) adjacency.set(e.target, [])
-        adjacency.get(e.source)!.push(e.target)
-        adjacency.get(e.target)!.push(e.source)
-      }
-      while (queue.length > 0) {
-        const [current, dist] = queue.shift()!
-        for (const neighbor of (adjacency.get(current) || [])) {
-          if (!neighborIds.has(neighbor)) {
-            neighborIds.add(neighbor)
-            distanceMap.set(neighbor, dist + 1)
-            queue.push([neighbor, dist + 1])
+      let displayNodes: WikiNode[]
+      let displayEdges: Edge[]
+      let distanceMap = new Map<string, number>()
+
+      if (mode === 'local' && centerId) {
+        const neighborIds = new Set<string>()
+        const queue: [string, number][] = [[centerId, 0]]
+        neighborIds.add(centerId)
+        distanceMap.set(centerId, 0)
+
+        const adjacency = new Map<string, string[]>()
+        for (const e of edges) {
+          if (!adjacency.has(e.source)) adjacency.set(e.source, [])
+          if (!adjacency.has(e.target)) adjacency.set(e.target, [])
+          adjacency.get(e.source)!.push(e.target)
+          adjacency.get(e.target)!.push(e.source)
+        }
+
+        while (queue.length > 0) {
+          const [current, dist] = queue.shift()!
+          if (dist >= MAX_BFS_DEPTH) continue
+          for (const neighbor of (adjacency.get(current) || [])) {
+            if (!neighborIds.has(neighbor)) {
+              neighborIds.add(neighbor)
+              distanceMap.set(neighbor, dist + 1)
+              queue.push([neighbor, dist + 1])
+            }
           }
         }
+
+        displayNodes = nodes.filter(n => neighborIds.has(n.id))
+        displayEdges = edges.filter(e => neighborIds.has(e.source) && neighborIds.has(e.target))
+      } else {
+        displayNodes = nodes
+        displayEdges = edges
       }
 
-      // Also include edges between neighbors (not just center↔neighbor)
-      const localNodes = nodes.filter(n => neighborIds.has(n.id))
-      const localEdges = edges.filter(e => neighborIds.has(e.source) && neighborIds.has(e.target))
-
-      const cyNodes = localNodes.map(n => {
-        const degree = localEdges.filter(e => e.source === n.id || e.target === n.id).length
+      const cyNodes = displayNodes.map(n => {
+        const degree = displayEdges.filter(e => e.source === n.id || e.target === n.id).length
         return {
           data: {
             id: n.id,
             label: n.title,
-            isCenter: n.id === centerId,
+            isCenter: mode === 'local' && n.id === centerId,
             metaType: n.meta_type,
             degree,
             dist: distanceMap.get(n.id) || 0,
@@ -71,18 +86,18 @@ export function LocalGraph({ centerId, nodes, edges }: {
         }
       })
 
-      const cyEdges = localEdges.map((e, i) => ({
+      const cyEdges = displayEdges.map((e, i) => ({
         data: {
           id: `e${i}`,
           source: e.source,
           target: e.target,
           label: e.type,
-          isOutgoing: e.source === centerId,
-          isIncoming: e.target === centerId,
+          isOutgoing: mode === 'local' && e.source === centerId,
+          isIncoming: mode === 'local' && e.target === centerId,
         },
       }))
 
-      const neighborCount = neighborIds.size
+      const nodeCount = cyNodes.length
 
       cy = cytoscape({
         container: containerRef.current,
@@ -92,7 +107,7 @@ export function LocalGraph({ centerId, nodes, edges }: {
             selector: 'node',
             style: {
               'background-color': (ele: any) => META_TYPE_COLORS[ele.data('metaType')] || '#6b7280',
-              'background-opacity': (ele: any) => Math.max(0.4, 0.9 - ele.data('dist') * 0.15),
+              'background-opacity': (ele: any) => mode === 'local' ? Math.max(0.4, 0.9 - ele.data('dist') * 0.15) : 0.85,
               'label': 'data(label)',
               'font-size': '10px',
               'font-family': '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -122,7 +137,6 @@ export function LocalGraph({ centerId, nodes, edges }: {
               'border-width': 2.5,
               'border-color': (ele: any) => META_TYPE_COLORS[ele.data('metaType')] || '#3b82f6',
               'border-opacity': 0.5,
-              'text-valign': 'bottom' as any,
               'text-margin-y': 8,
               'color': '#1f2937',
               'shadow-blur': 12,
@@ -163,14 +177,14 @@ export function LocalGraph({ centerId, nodes, edges }: {
         ] as any,
         layout: {
           name: 'cose',
-          idealEdgeLength: () => neighborCount <= 6 ? 140 : neighborCount <= 15 ? 100 : 80,
+          idealEdgeLength: () => nodeCount <= 6 ? 140 : nodeCount <= 15 ? 120 : 100,
           nodeOverlap: 20,
-          padding: 40,
+          padding: mode === 'local' ? 40 : 60,
           randomize: false,
-          componentSpacing: 60,
-          nodeRepulsion: () => neighborCount <= 6 ? 12000 : neighborCount <= 15 ? 8000 : 5000,
+          componentSpacing: mode === 'local' ? 60 : 100,
+          nodeRepulsion: () => nodeCount <= 6 ? 12000 : nodeCount <= 15 ? 8000 : 5000,
           edgeElasticity: () => 80,
-          gravity: neighborCount <= 6 ? 0.3 : 0.5,
+          gravity: nodeCount <= 6 ? 0.3 : 0.5,
           numIter: 800,
         } as any,
         userZoomingEnabled: true,
@@ -179,43 +193,53 @@ export function LocalGraph({ centerId, nodes, edges }: {
         maxZoom: 3,
       })
 
-      // Hover effects
       cy.on('tap', 'node', (evt: any) => {
         const nodeId = evt.target.id()
-        if (nodeId !== centerId) {
-          router.push(`/node/${nodeId}`)
-        }
+        if (mode === 'local' && nodeId === centerId) return
+        router.push(`/node/${nodeId}`)
       })
 
-      cy.on('mouseover', 'node', (evt: any) => {
-        const node = evt.target
-        node.style({
-          'border-color': META_TYPE_COLORS[node.data('metaType')] || '#1d4ed8',
-          'border-width': node.data('isCenter') ? 3 : 2.5,
-          'border-opacity': 1,
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      if (!isTouchDevice) {
+        cy.on('mouseover', 'node', (evt: any) => {
+          const node = evt.target
+          node.style({
+            'border-color': META_TYPE_COLORS[node.data('metaType')] || '#1d4ed8',
+            'border-width': node.data('isCenter') ? 3 : 2.5,
+            'border-opacity': 1,
+          })
+          node.connectedEdges().style({ 'opacity': 1, 'width': 2.5 })
+          containerRef.current!.style.cursor = (mode === 'local' && node.data('isCenter')) ? 'default' : 'pointer'
         })
-        node.connectedEdges().style({ 'opacity': 1, 'width': 2.5 })
-        containerRef.current!.style.cursor = node.data('isCenter') ? 'default' : 'pointer'
-      })
 
-      cy.on('mouseout', 'node', (evt: any) => {
-        const node = evt.target
-        const isCenter = node.data('isCenter')
-        node.style({
-          'border-color': isCenter ? (META_TYPE_COLORS[node.data('metaType')] || '#3b82f6') : '#e5e7eb',
-          'border-width': isCenter ? 2.5 : 1.5,
-          'border-opacity': isCenter ? 0.5 : 1,
+        cy.on('mouseout', 'node', (evt: any) => {
+          const node = evt.target
+          const isCenter = node.data('isCenter')
+          node.style({
+            'border-color': isCenter ? (META_TYPE_COLORS[node.data('metaType')] || '#3b82f6') : '#e5e7eb',
+            'border-width': isCenter ? 2.5 : 1.5,
+            'border-opacity': isCenter ? 0.5 : 1,
+          })
+          node.connectedEdges().forEach((edge: any) => {
+            const isDirectEdge = edge.data('isOutgoing') || edge.data('isIncoming')
+            edge.style({ 'opacity': isDirectEdge ? 0.7 : 0.5, 'width': 1.5 })
+          })
+          containerRef.current!.style.cursor = 'default'
         })
-        node.connectedEdges().forEach((edge: any) => {
-          const isDirectEdge = edge.data('isOutgoing') || edge.data('isIncoming')
-          edge.style({ 'opacity': isDirectEdge ? 0.7 : 0.5, 'width': 1.5 })
-        })
-        containerRef.current!.style.cursor = 'default'
-      })
+      }
     })
 
     return () => { cy?.destroy() }
-  }, [mounted, centerId, nodes, edges, router])
+  }, [mounted, nodes, edges, mode, centerId, router])
 
-  return <div ref={containerRef} className="w-full h-[500px] rounded-xl border border-gray-100 bg-stone-50/50" />
+  const heightClass = mode === 'local'
+    ? 'h-75 md:h-125'
+    : 'h-[calc(100vh-200px)] md:h-[calc(100vh-80px)]'
+
+  return (
+    <div
+      ref={containerRef}
+      className={`w-full ${heightClass} rounded-xl border border-gray-100 bg-stone-50/50`}
+    />
+  )
 }

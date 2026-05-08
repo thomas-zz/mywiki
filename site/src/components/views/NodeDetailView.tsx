@@ -3,7 +3,7 @@
 import { useWikiData } from '@/lib/WikiDataContext'
 import { MetaTypeChip, StatusBadge, InsightOriginChip } from '@/components/NodeCard'
 import { RelationPanel } from '@/components/RelationPanel'
-import { LocalGraph } from '@/components/LocalGraph'
+import { WikiGraph } from '@/components/WikiGraph'
 import { BackBar } from '@/components/BackBar'
 import { domainToSlug } from '@/lib/domain'
 import Link from 'next/link'
@@ -72,7 +72,7 @@ export function NodeDetailView({ nodeId }: { nodeId: string }) {
 
       <div>
         <h2 className="text-sm font-semibold text-gray-500 mb-3">局部图谱</h2>
-        <LocalGraph centerId={node.id} nodes={data.nodes} edges={data.edges} />
+        <WikiGraph centerId={node.id} nodes={data.nodes} edges={data.edges} mode="local" />
       </div>
     </div>
   )

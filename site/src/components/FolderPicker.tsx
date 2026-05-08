@@ -126,40 +126,37 @@ export function FolderPicker({ onDataLoaded }: { onDataLoaded: (data: WikiData, 
   const [stats, setStats] = useState<{ total: number; parsed: number; failed: string[] } | null>(null)
   const [progress, setProgress] = useState('')
 
-  const pickFolder = useCallback(async () => {
+  const pickFolderFromHandle = useCallback(async (dirHandle: FileSystemDirectoryHandle) => {
+    setLoading(true)
+    setError(null)
+    setStats(null)
+    setFolderName(dirHandle.name)
+    setProgress('扫描文件...')
+
+    let nodesDir: FileSystemDirectoryHandle | null = null
     try {
-      // @ts-expect-error File System Access API
-      const dirHandle = await window.showDirectoryPicker()
-      setLoading(true)
-      setError(null)
-      setStats(null)
-      setFolderName(dirHandle.name)
-      setProgress('扫描文件...')
+      nodesDir = await dirHandle.getDirectoryHandle('nodes')
+    } catch {
+      nodesDir = dirHandle
+    }
 
-      let nodesDir: FileSystemDirectoryHandle | null = null
+    const nodeMap = new Map<string, WikiNode>()
+    const failedFiles: string[] = []
+    let fileCount = 0
+
+    for await (const entry of (nodesDir as any).values()) {
+      if (entry.kind !== 'file' || !entry.name.endsWith('.md')) continue
+      fileCount++
+      setProgress(`解析 ${entry.name}...（${nodeMap.size + failedFiles.length}/${fileCount}）`)
       try {
-        nodesDir = await dirHandle.getDirectoryHandle('nodes')
-      } catch {
-        nodesDir = dirHandle
-      }
+        const file = await entry.getFile()
+        const text = await file.text()
+        const { data: fm, content } = parseFrontmatter(text)
 
-      const nodeMap = new Map<string, WikiNode>()
-      const failedFiles: string[] = []
-      let fileCount = 0
-
-      for await (const entry of (nodesDir as any).values()) {
-        if (entry.kind !== 'file' || !entry.name.endsWith('.md')) continue
-        fileCount++
-        setProgress(`解析 ${entry.name}...（${nodeMap.size + failedFiles.length}/${fileCount}）`)
-        try {
-          const file = await entry.getFile()
-          const text = await file.text()
-          const { data: fm, content } = parseFrontmatter(text)
-
-          if (!fm.id && !fm.title) {
-            failedFiles.push(`${entry.name}（缺少 id 和 title）`)
-            continue
-          }
+        if (!fm.id && !fm.title) {
+          failedFiles.push(`${entry.name}（缺少 id 和 title）`)
+          continue
+        }
 
         const node: WikiNode = {
           id: fm.id || entry.name.replace('.md', ''),
@@ -181,67 +178,73 @@ export function FolderPicker({ onDataLoaded }: { onDataLoaded: (data: WikiData, 
           back_edges: [],
         }
         nodeMap.set(node.id, node)
-        } catch (e: any) {
-          failedFiles.push(`${entry.name}（${e.message || '解析错误'}）`)
-        }
+      } catch (e: any) {
+        failedFiles.push(`${entry.name}（${e.message || '解析错误'}）`)
       }
+    }
 
-      if (nodeMap.size === 0) {
-        setError(`未找到有效节点。扫描了 ${fileCount} 个 .md 文件${failedFiles.length ? `，${failedFiles.length} 个解析失败` : ''}`)
-        setLoading(false)
-        setProgress('')
-        return
-      }
-
-      setProgress('构建关系图谱...')
-
-      const edges: Edge[] = []
-      for (const [id, node] of nodeMap) {
-        node.metrics.out_degree = node.relations.length
-        for (const rel of node.relations) {
-          const target = nodeMap.get(rel.to)
-          if (!target) continue
-          target.metrics.in_degree++
-          target.back_edges.push({ from: id, type: rel.type, note: rel.note })
-          edges.push({ source: id, target: rel.to, type: rel.type, note: rel.note })
-        }
-      }
-
-      const nodes = Array.from(nodeMap.values())
-      const sorted = [...nodes].sort((a, b) => (b.metrics.in_degree + b.metrics.out_degree) - (a.metrics.in_degree + a.metrics.out_degree))
-      const emergence: Emergence = {
-        hubs: sorted.slice(0, 5),
-        crossDomainHubs: nodes.filter(n => n.domains.length >= 2 && n.metrics.in_degree >= 2),
-        overloadCandidates: nodes.filter(n => n.body_raw.length > 2000 && n.metrics.in_degree >= 3),
-        orphans: nodes.filter(n => n.metrics.in_degree === 0 && n.metrics.out_degree === 0),
-        recentUpdates: [...nodes].sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 5),
-        openQuestions: nodes.filter(n => n.meta_type === 'question'),
-      }
-
-      const domainMap: Record<string, WikiNode[]> = {}
-      for (const node of nodes) {
-        for (const domain of node.domains) {
-          if (!domainMap[domain]) domainMap[domain] = []
-          domainMap[domain].push(node)
-        }
-      }
-
-      const nodeRecord: Record<string, WikiNode> = {}
-      for (const node of nodes) nodeRecord[node.id] = node
-
-      onDataLoaded({ nodes, edges, emergence, nodeMap: nodeRecord, domainMap }, dirHandle.name)
-      setStats({ total: fileCount, parsed: nodeMap.size, failed: failedFiles })
+    if (nodeMap.size === 0) {
+      setError(`未找到有效节点。扫描了 ${fileCount} 个 .md 文件${failedFiles.length ? `，${failedFiles.length} 个解析失败` : ''}`)
       setLoading(false)
       setProgress('')
+      return
+    }
+
+    setProgress('构建关系图谱...')
+
+    const edges: Edge[] = []
+    for (const [id, node] of nodeMap) {
+      node.metrics.out_degree = node.relations.length
+      for (const rel of node.relations) {
+        const target = nodeMap.get(rel.to)
+        if (!target) continue
+        target.metrics.in_degree++
+        target.back_edges.push({ from: id, type: rel.type, note: rel.note })
+        edges.push({ source: id, target: rel.to, type: rel.type, note: rel.note })
+      }
+    }
+
+    const nodes = Array.from(nodeMap.values())
+    const sorted = [...nodes].sort((a, b) => (b.metrics.in_degree + b.metrics.out_degree) - (a.metrics.in_degree + a.metrics.out_degree))
+    const emergence: Emergence = {
+      hubs: sorted.slice(0, 5),
+      crossDomainHubs: nodes.filter(n => n.domains.length >= 2 && n.metrics.in_degree >= 2),
+      overloadCandidates: nodes.filter(n => n.body_raw.length > 2000 && n.metrics.in_degree >= 3),
+      orphans: nodes.filter(n => n.metrics.in_degree === 0 && n.metrics.out_degree === 0),
+      recentUpdates: [...nodes].sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 5),
+      openQuestions: nodes.filter(n => n.meta_type === 'question'),
+    }
+
+    const domainMap: Record<string, WikiNode[]> = {}
+    for (const node of nodes) {
+      for (const domain of node.domains) {
+        if (!domainMap[domain]) domainMap[domain] = []
+        domainMap[domain].push(node)
+      }
+    }
+
+    const nodeRecord: Record<string, WikiNode> = {}
+    for (const node of nodes) nodeRecord[node.id] = node
+
+    onDataLoaded({ nodes, edges, emergence, nodeMap: nodeRecord, domainMap }, dirHandle.name)
+    setStats({ total: fileCount, parsed: nodeMap.size, failed: failedFiles })
+    setLoading(false)
+    setProgress('')
+  }, [onDataLoaded])
+
+  const pickFolder = useCallback(async () => {
+    try {
+      // @ts-expect-error File System Access API
+      const dirHandle = await window.showDirectoryPicker()
+      pickFolderFromHandle(dirHandle)
     } catch (e: any) {
       if (e.name === 'AbortError') return
       setError(e.message || '读取失败')
-      setLoading(false)
     }
-  }, [onDataLoaded])
+  }, [pickFolderFromHandle])
 
   return (
-    <div className="flex items-center gap-3 flex-shrink-0">
+    <div className="flex items-center gap-3 shrink-0">
       <button
         onClick={pickFolder}
         disabled={loading}

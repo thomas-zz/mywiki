@@ -1,7 +1,7 @@
 'use client'
 
 import { useWikiData } from '@/lib/WikiDataContext'
-import { GlobalGraph } from '@/components/GlobalGraph'
+import { WikiGraph } from '@/components/WikiGraph'
 import { META_TYPE_CONFIG } from '@/components/NodeCard'
 import type { MetaType } from '@/lib/types'
 
@@ -19,7 +19,7 @@ export function GraphView() {
           </div>
         ))}
       </div>
-      <GlobalGraph nodes={data.nodes} edges={data.edges} />
+      <WikiGraph nodes={data.nodes} edges={data.edges} mode="global" />
     </div>
   )
 }

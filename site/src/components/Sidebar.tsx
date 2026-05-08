@@ -8,6 +8,7 @@ import { domainToSlug } from '@/lib/domain'
 
 const NAV_ITEMS = [
   { href: '/', label: '首页' },
+  { href: '/timeline', label: '时间线' },
   { href: '/graph', label: '全局图谱' },
   { href: '/emergence', label: '涌现 · 自进化' },
   { href: '/all', label: '全部节点' },
@@ -29,7 +30,6 @@ export function Sidebar() {
       <Link href="/" onClick={() => setOpen(false)} style={{ borderBottom: 'none', color: 'var(--text)' }}>
         <h1 className="text-[18px] font-semibold tracking-wide text-gray-900 m-0">myWiki</h1>
       </Link>
-      <p className="text-[12px] mb-6" style={{ color: 'var(--muted)' }}>个人理解的镜子 · 不是博客</p>
 
       <div className="text-[11px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--muted)' }}>视图</div>
       <nav className="mb-4">
