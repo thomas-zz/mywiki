@@ -22,7 +22,7 @@ interface GHEntry {
 const GH_TOKEN_KEY = 'mywiki-gh-token'
 
 export function DataSourcePicker() {
-  const { sources, activeSourceId, addSource, switchSource, removeSource } = useWikiDataSources()
+  const { sources, activeSourceId, addSource, switchSource, removeSource, refreshing } = useWikiDataSources()
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<'list' | 'add'>('list')
   const [tab, setTab] = useState<'github' | 'local'>('github')
@@ -75,7 +75,7 @@ export function DataSourcePicker() {
     setView('list')
   }
 
-  const processFiles = useCallback(async (files: { name: string; content: string }[], label: string, type: 'github' | 'local') => {
+  const processFiles = useCallback(async (files: { name: string; content: string }[], label: string, type: 'github' | 'local', config?: { owner: string; repo: string; branch: string; path: string }) => {
     const nodeMap = new Map<string, WikiNode>()
     const failedFiles: string[] = []
     for (const file of files) {
@@ -90,7 +90,7 @@ export function DataSourcePicker() {
       return
     }
     const data = buildWikiDataFromNodes(nodeMap)
-    await addSource(data, label, type)
+    await addSource(data, label, type, config)
     setLoading(false)
     setProgress('')
     closeModal()
@@ -178,7 +178,7 @@ export function DataSourcePicker() {
         )
         files.push(...results)
       }
-      await processFiles(files, label, 'github')
+      await processFiles(files, label, 'github', { owner, repo, branch, path: dirPath })
     } catch (e: any) {
       setError(e.message || '加载失败')
       setLoading(false)
@@ -237,6 +237,9 @@ export function DataSourcePicker() {
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           {activeSource ? activeSource.label : '选择数据源'}
+          {refreshing && (
+            <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>
+          )}
         </button>
       </div>
 
