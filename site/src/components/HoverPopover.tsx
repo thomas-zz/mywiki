@@ -173,11 +173,12 @@ const Popover = forwardRef<HTMLDivElement, {
   return (
     <div
       ref={ref}
-      className="fixed z-[100] w-[360px] max-w-[90vw] bg-white rounded-[10px] shadow-xl p-3.5 flex flex-col"
+      className="fixed z-[100] w-[360px] max-w-[90vw] rounded-[10px] shadow-xl p-3.5 flex flex-col"
       style={{
         left,
         ...(useBottom ? { bottom } : { top }),
         maxHeight: maxH,
+        background: 'var(--surface)',
         border: '1px solid var(--border)',
         animation: 'fadeIn 0.12s ease',
       }}
@@ -201,7 +202,7 @@ const Popover = forwardRef<HTMLDivElement, {
       <a
         href="#"
         onClick={handleClick}
-        className="block text-[11px] mt-2.5 pt-2 text-center hover:!bg-stone-50 rounded flex-shrink-0"
+        className="block text-[11px] mt-2.5 pt-2 text-center hover:bg-[var(--hover)] rounded flex-shrink-0"
         style={{ color: 'var(--muted)', borderTop: '1px solid var(--border)' }}
       >
         点击跳转到详情 →

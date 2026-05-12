@@ -21,6 +21,7 @@ export interface SourceMeta {
   type: 'github' | 'local'
   savedAt: number
   config?: SourceConfig
+  nodeCount?: number
 }
 
 interface SourceRecord extends SourceMeta {
@@ -54,7 +55,7 @@ async function dbGetAllSourceMetas(): Promise<SourceMeta[]> {
   return new Promise(resolve => {
     req.onsuccess = () => {
       const records: SourceRecord[] = req.result || []
-      resolve(records.map(({ id, label, type, savedAt, config }) => ({ id, label, type, savedAt, config })))
+      resolve(records.map(({ id, label, type, savedAt, config, nodeCount }) => ({ id, label, type, savedAt, config, nodeCount })))
     }
     req.onerror = () => resolve([])
   })
@@ -192,8 +193,10 @@ export function WikiDataProvider({ serverData, children }: { serverData: WikiDat
         const data = buildWikiDataFromNodes(nodeMap)
         setActiveData(data)
         // Update cache
-        const updated: SourceRecord = { ...record, data, savedAt: Date.now() }
+        const updated: SourceRecord = { ...record, data, savedAt: Date.now(), nodeCount: data.nodes.length }
         await dbSaveSource(updated)
+        const metas = await dbGetAllSourceMetas()
+        setSources(metas.sort((a, b) => b.savedAt - a.savedAt))
       }
     }
     setRefreshing(false)
@@ -220,7 +223,7 @@ export function WikiDataProvider({ serverData, children }: { serverData: WikiDat
 
   const addSource = useCallback(async (data: WikiData, label: string, type: 'github' | 'local', config?: SourceConfig) => {
     const id = makeSourceId(label, type)
-    const record: SourceRecord = { id, label, type, data, savedAt: Date.now(), config }
+    const record: SourceRecord = { id, label, type, data, savedAt: Date.now(), config, nodeCount: data.nodes.length }
     await dbSaveSource(record)
     await dbSetActiveId(id)
     setActiveData(data)

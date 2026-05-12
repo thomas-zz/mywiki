@@ -34,7 +34,7 @@ export function AllNodesView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
-          <h3 className="text-[14px] font-semibold mb-4 text-gray-700">按元类型</h3>
+          <h3 className="text-[14px] font-semibold mb-4" style={{ color: 'var(--text)' }}>按元类型</h3>
           {(Object.entries(byMeta) as [MetaType, typeof data.nodes][]).map(([type, nodes]) => (
             <div key={type} className="mb-5">
               <div className="flex items-center gap-2 mb-2">
@@ -56,7 +56,7 @@ export function AllNodesView() {
         </div>
 
         <div>
-          <h3 className="text-[14px] font-semibold mb-4 text-gray-700">按状态</h3>
+          <h3 className="text-[14px] font-semibold mb-4" style={{ color: 'var(--text)' }}>按状态</h3>
           {(Object.entries(byStatus) as [NodeStatus, typeof data.nodes][]).map(([status, nodes]) => (
             <div key={status} className="mb-5">
               <div className="flex items-center gap-2 mb-2">

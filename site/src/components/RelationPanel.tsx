@@ -14,15 +14,15 @@ export function RelationPanel({ relations, backEdges, nodeMap }: {
     <div className="space-y-6">
       {relations.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-3">↗ 我指向</h3>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--muted)' }}>↗ 我指向</h3>
           <div className="space-y-2">
             {relations.map((rel, i) => {
               const target = nodeMap[rel.to]
               if (!target) return null
               return (
-                <Link key={i} href={`/node/${rel.to}`} data-nodeid={rel.to} className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors">
+                <Link key={i} href={`/node/${rel.to}`} data-nodeid={rel.to} className="flex items-center gap-2 p-2 rounded hover:bg-[var(--hover)] transition-colors">
                   <RelationTypeChip type={rel.type} direction="out" />
-                  <span className="font-medium text-gray-900 text-sm">{target.title}</span>
+                  <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{target.title}</span>
                   <MetaTypeChip type={target.meta_type} />
                   {target.meta_type === 'insight' && <InsightOriginChip origin={target.insight_origin} />}
                   <StatusBadge status={target.status} />
@@ -35,15 +35,15 @@ export function RelationPanel({ relations, backEdges, nodeMap }: {
       )}
       {backEdges.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-3">↩ 指向我</h3>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--muted)' }}>↩ 指向我</h3>
           <div className="space-y-2">
             {backEdges.map((edge, i) => {
               const source = nodeMap[edge.from]
               if (!source) return null
               return (
-                <Link key={i} href={`/node/${edge.from}`} data-nodeid={edge.from} className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors">
+                <Link key={i} href={`/node/${edge.from}`} data-nodeid={edge.from} className="flex items-center gap-2 p-2 rounded hover:bg-[var(--hover)] transition-colors">
                   <RelationTypeChip type={edge.type} direction="in" />
-                  <span className="font-medium text-gray-900 text-sm">{source.title}</span>
+                  <span className="font-medium text-sm" style={{ color: 'var(--text)' }}>{source.title}</span>
                   <MetaTypeChip type={source.meta_type} />
                   {source.meta_type === 'insight' && <InsightOriginChip origin={source.insight_origin} />}
                   <StatusBadge status={source.status} />

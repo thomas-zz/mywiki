@@ -121,6 +121,13 @@ export async function buildWikiData(): Promise<WikiData> {
     for (const domain of node.domains) {
       if (!domainMap[domain]) domainMap[domain] = []
       domainMap[domain].push(node)
+      const stripped = domain.startsWith('#') ? domain.slice(1) : domain
+      const parts = stripped.split('/')
+      for (let i = 1; i < parts.length; i++) {
+        const ancestor = `#${parts.slice(0, i).join('/')}`
+        if (!domainMap[ancestor]) domainMap[ancestor] = []
+        if (!domainMap[ancestor].includes(node)) domainMap[ancestor].push(node)
+      }
     }
   }
 

@@ -34,29 +34,29 @@ export function NodeDetailView({ nodeId }: { nodeId: string }) {
           <MetaTypeChip type={node.meta_type} />
           {node.meta_type === 'insight' && <InsightOriginChip origin={node.insight_origin} />}
           <StatusBadge status={node.status} />
-          <span className="text-xs text-gray-400">入链 {node.metrics.in_degree} · 出链 {node.metrics.out_degree}</span>
+          <span className="text-xs" style={{ color: 'var(--muted)' }}>入链 {node.metrics.in_degree} · 出链 {node.metrics.out_degree}</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{node.title}</h1>
+        <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>{node.title}</h1>
         <div className="flex flex-wrap gap-2 mb-2">
           {node.domains.map(d => (
             <Link key={d} href={`/domain/${domainToSlug(d)}`} className="text-sm text-blue-600 hover:underline">{d}</Link>
           ))}
         </div>
-        <div className="text-xs text-gray-400">
+        <div className="text-xs" style={{ color: 'var(--muted)' }}>
           创建 {node.created} · 更新 {node.updated}
           {node.wiki && <span> · {node.wiki}</span>}
         </div>
       </div>
 
-      <div className="wiki-body text-gray-800 mb-8" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+      <div className="wiki-body mb-8" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
 
       {node.sources.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-500 mb-3">来源</h2>
+          <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--muted)' }}>来源</h2>
           <ul className="space-y-1">
             {node.sources.map((s, i) => (
-              <li key={i} className="text-sm text-gray-600">
-                {s.title} {s.date && <span className="text-gray-400">({s.date})</span>}
+              <li key={i} className="text-sm" style={{ color: 'var(--muted)' }}>
+                {s.title} {s.date && <span style={{ color: 'var(--muted)' }}>({s.date})</span>}
               </li>
             ))}
           </ul>
@@ -65,14 +65,14 @@ export function NodeDetailView({ nodeId }: { nodeId: string }) {
 
       {(node.relations.length > 0 || node.back_edges.length > 0) && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-500 mb-3">关系</h2>
+          <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--muted)' }}>关系</h2>
           <RelationPanel relations={node.relations} backEdges={node.back_edges} nodeMap={data.nodeMap} />
         </div>
       )}
 
       <div>
-        <h2 className="text-sm font-semibold text-gray-500 mb-3">局部图谱</h2>
-        <WikiGraph centerId={node.id} nodes={data.nodes} edges={data.edges} mode="local" />
+        <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--muted)' }}>局部图谱</h2>
+        <WikiGraph centerId={node.id} nodes={data.nodes} edges={data.edges} mode="local" interactive />
       </div>
     </div>
   )

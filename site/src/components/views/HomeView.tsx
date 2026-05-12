@@ -1,11 +1,13 @@
 'use client'
 
-import { useWikiData } from '@/lib/WikiDataContext'
+import { useWikiData, useWikiDataSources } from '@/lib/WikiDataContext'
 import { NodeCard, META_TYPE_CONFIG } from '@/components/NodeCard'
+import { PageSkeleton } from '@/components/Skeleton'
 import type { MetaType } from '@/lib/types'
 
 export function HomeView() {
   const data = useWikiData()
+  const { refreshing } = useWikiDataSources()
   const { emergence } = data
   const growing = data.nodes.filter(n => n.status === 'seed' || n.status === 'growing')
 
@@ -16,6 +18,8 @@ export function HomeView() {
     { title: '🌐 跨领域节点', nodes: emergence.crossDomainHubs, sub: (n: any) => n.domains.join(' · ') },
     { title: '❓ 开放问题', nodes: emergence.openQuestions, sub: (n: any) => n.body_raw.slice(0, 60).replace(/\n/g, '') },
   ]
+
+  if (data.nodes.length === 0 && refreshing) return <PageSkeleton />
 
   return (
     <div>
@@ -36,8 +40,8 @@ export function HomeView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {sections.map(section => (
           section.nodes.length > 0 && (
-            <div key={section.title} className="bg-white border rounded-[10px] p-5" style={{ borderColor: 'var(--border)' }}>
-              <h3 className="text-[13px] font-semibold mb-3 text-gray-800">{section.title}</h3>
+            <div key={section.title} className="border rounded-[10px] p-5" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+              <h3 className="text-[13px] font-semibold mb-3" style={{ color: 'var(--text)' }}>{section.title}</h3>
               <div>
                 {section.nodes.map(node => (
                   <NodeCard key={node.id} {...node} subtitle={section.sub(node)} />

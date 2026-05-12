@@ -8,7 +8,7 @@ export function TopBar() {
   const data = useWikiData()
 
   return (
-    <div className="sticky top-0 z-30 bg-white/80 backdrop-blur px-4 lg:px-[56px] py-2.5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--border)' }}>
+    <div className="sticky top-0 z-30 backdrop-blur px-4 lg:px-[56px] py-2.5 flex items-center gap-4" style={{ borderBottom: '1px solid var(--border)', background: 'color-mix(in srgb, var(--surface) 80%, transparent)' }}>
       <SearchBox nodes={data.nodes} />
       <DataSourcePicker />
     </div>

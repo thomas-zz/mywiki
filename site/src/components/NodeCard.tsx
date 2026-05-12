@@ -74,18 +74,18 @@ export function NodeCard({ id, title, meta_type, insight_origin, status, domains
   id: string; title: string; meta_type: MetaType; insight_origin?: InsightOrigin; status: NodeStatus; domains: string[]; subtitle?: string
 }) {
   return (
-    <Link href={`/node/${id}`} data-nodeid={id} className="block py-2 border-b border-gray-100 last:border-0 hover:bg-stone-50 transition-colors -mx-2 px-2 rounded">
+    <Link href={`/node/${id}`} data-nodeid={id} className="block py-2 border-b last:border-0 hover:bg-[var(--hover)] transition-colors -mx-2 px-2 rounded" style={{ borderColor: 'var(--border)' }}>
       <div className="flex items-start gap-1.5">
-        <span className="text-[13px] font-medium text-gray-900 hover:underline flex-1 min-w-0">{title}</span>
+        <span className="text-[13px] font-medium hover:underline flex-1 min-w-0" style={{ color: 'var(--text)' }}>{title}</span>
         <span className="flex items-center gap-1 flex-shrink-0">
           <MetaTypeChip type={meta_type} />
           {meta_type === 'insight' && <InsightOriginChip origin={insight_origin} />}
           <StatusBadge status={status} />
         </span>
       </div>
-      {subtitle && <div className="text-[11px] text-gray-400 mt-0.5">{subtitle}</div>}
+      {subtitle && <div className="text-[11px] mt-0.5" style={{ color: 'var(--muted)' }}>{subtitle}</div>}
       {!subtitle && domains.length > 0 && (
-        <div className="text-[11px] text-gray-400 mt-0.5">{domains.join(' · ')}</div>
+        <div className="text-[11px] mt-0.5" style={{ color: 'var(--muted)' }}>{domains.join(' · ')}</div>
       )}
     </Link>
   )
