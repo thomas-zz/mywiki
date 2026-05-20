@@ -16,6 +16,7 @@ export function HoverPopoverProvider({ children }: { children: React.ReactNode }
   const [popover, setPopover] = useState<PopoverData | null>(null)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const switchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nodeMap = useRef<Record<string, WikiNode>>({})
   const popoverRef = useRef<HTMLDivElement>(null)
   const insidePopover = useRef(false)
@@ -33,6 +34,7 @@ export function HoverPopoverProvider({ children }: { children: React.ReactNode }
   const cancelAll = useCallback(() => {
     if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null }
     if (switchTimer.current) { clearTimeout(switchTimer.current); switchTimer.current = null }
+    if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null }
   }, [])
 
   const scheduleHide = useCallback(() => {
@@ -61,7 +63,6 @@ export function HoverPopoverProvider({ children }: { children: React.ReactNode }
     const rect = target.getBoundingClientRect()
 
     if (popover) {
-      // Popover already showing for another node — delay switch so user can reach popover
       if (switchTimer.current) clearTimeout(switchTimer.current)
       switchTimer.current = setTimeout(() => {
         if (!insidePopover.current) {
@@ -70,7 +71,9 @@ export function HoverPopoverProvider({ children }: { children: React.ReactNode }
       }, 300)
     } else {
       cancelAll()
-      setPopover({ node, triggerRect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }, triggerId: nodeId })
+      showTimer.current = setTimeout(() => {
+        setPopover({ node, triggerRect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }, triggerId: nodeId })
+      }, 400)
     }
   }, [popover, cancelAll])
 
@@ -82,6 +85,7 @@ export function HoverPopoverProvider({ children }: { children: React.ReactNode }
       cancelAll()
       return
     }
+    if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null }
     const target = (e.target as HTMLElement).closest('[data-nodeid]')
     if (target) scheduleHide()
   }, [cancelAll, scheduleHide])
@@ -196,7 +200,7 @@ const Popover = forwardRef<HTMLDivElement, {
         <span>· {node.status} · ←{node.metrics.in_degree} / →{node.metrics.out_degree}</span>
         {node.domains.length > 0 && <span>· {node.domains.join(' ')}</span>}
       </div>
-      <div className="text-[13px] leading-relaxed overflow-y-auto flex-1 min-h-0" style={{ color: '#334155', overscrollBehavior: 'contain' }}>
+      <div className="text-[13px] leading-relaxed overflow-y-auto flex-1 min-h-0" style={{ color: 'var(--text)', opacity: 0.85, overscrollBehavior: 'contain' }}>
         {snippet}
       </div>
       <a

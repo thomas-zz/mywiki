@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useWikiData } from '@/lib/WikiDataContext'
-import { NodeCard, StatusBadge } from '@/components/NodeCard'
+import { NodeCard } from '@/components/NodeCard'
 import Link from 'next/link'
 import type { NodeStatus, WikiNode } from '@/lib/types'
 
@@ -144,7 +144,6 @@ export function TimelineView() {
                           subtitle={sortBy === 'updated' ? `创建于 ${node.created}` : `更新于 ${node.updated}`}
                         />
                       </div>
-                      <StatusBadge status={node.status} />
                     </div>
                     {evo && (
                       <div className="ml-6 mb-1 text-[11px] flex flex-wrap gap-x-3" style={{ color: 'var(--muted)' }}>
