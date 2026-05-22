@@ -3,6 +3,10 @@ node_modules/
 out/
 site-dist/
 skill/
+private/
+myWiki/
+mywiki.config.ts
+.npmrc
 .env.local
 *.log
 .DS_Store

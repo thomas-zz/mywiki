@@ -83,6 +83,18 @@ relations:
 - 涌现/自进化视图
 - 全文搜索
 
+### 本地使用
+
+```bash
+npx mywiki-cli panel
+```
+
+默认免登录，直接读取本地 wiki 目录。
+
+### 在线部署（Vercel 等）
+
+将本仓库部署到 Vercel 后，通过面板内的「数据源」按钮配置 GitHub 仓库（支持私有仓库，需在浏览器中输入 GitHub Personal Access Token）。配置保存在浏览器 localStorage 中，每次打开自动刷新数据。
+
 ## 与 OpenClaw / Shortcuts 集成
 
 myWiki 天然支持自动化：在手机上分享一个链接，本地自动完成摄入。
