@@ -1,5 +1,5 @@
 {
-  "name": "mywiki",
+  "name": "mywiki-cli",
   "version": "0.1.0",
   "description": "个人知识 wiki — AI 驱动的结构化理解网络",
   "type": "module",
