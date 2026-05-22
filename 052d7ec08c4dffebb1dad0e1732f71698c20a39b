@@ -1,0 +1,129 @@
+.gitignore
+  669aebc7651875a5 6-9,13
+README.md
+  669aebc7651875a5 86-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "052d7ec08c4dffebb1dad0e1732f71698c20a39b",
+  "prompts": {
+    "14825591361210c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e88c894a-9f77-4973-a4b5-216e985b145f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1213,
+      "overriden_lines": 0
+    },
+    "4c0f883506696edd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c8ea6de-ff12-4551-95d4-df66cc3cbdf2",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 98,
+      "overriden_lines": 0
+    },
+    "5ec74084f6e62aa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dfdfb-33db-7501-b871-d7183993751e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 773,
+      "overriden_lines": 0
+    },
+    "60b212cbdaeabc9a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4993-358b-7160-b64b-6310595ff108",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "62ccd07f3936f4b9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1cc82c0b-d96c-4163-b96d-890cdf162ec0",
+        "model": "mimo-v2-pro"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 661,
+      "overriden_lines": 0
+    },
+    "669aebc7651875a5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5618b6e-354b-40c0-8deb-6c5e357b6a24",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 2572,
+      "accepted_lines": 1814,
+      "overriden_lines": 0
+    },
+    "7dd7d967a7815348": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ddba62f-4b40-48a8-bc12-0b51b3387be4",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 403,
+      "overriden_lines": 0
+    },
+    "85e6907344dfd13a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3e936d93-a103-4308-bbf2-d0b0804128b0",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 329,
+      "overriden_lines": 0
+    },
+    "9af4b9162dc49fc4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4d94-24de-74d0-9a62-e4e1126828d9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
