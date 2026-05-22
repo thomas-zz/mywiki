@@ -1,0 +1,194 @@
+docs/mywiki/SKILL.md
+  669aebc7651875a5 29-36
+lib/init.mjs
+  669aebc7651875a5 1-81
+site/next.config.ts
+  669aebc7651875a5 1,5-6
+lib/update.mjs
+  669aebc7651875a5 1-15
+docs/mywiki/mywiki-refactor/SKILL.md
+  669aebc7651875a5 26,55-56
+docs/mywiki/mywiki-query/SKILL.md
+  669aebc7651875a5 12,16-17,44
+scripts/build-site.sh
+  669aebc7651875a5 1-33
+site/src/app/(main)/changelog/page.tsx
+  669aebc7651875a5 8-19,21-22
+site/src/app/layout.tsx
+  669aebc7651875a5 5-6
+docs/mywiki/mywiki-lint/SKILL.md
+  669aebc7651875a5 12,16,29-31,43,169
+lib/config.mjs
+  669aebc7651875a5 1-39
+package.json
+  669aebc7651875a5 1-31
+.gitignore
+  h_4ff32b0d88ed92 9
+  669aebc7651875a5 4-5
+templates/meta/log.md
+  669aebc7651875a5 1-4
+README.md
+  669aebc7651875a5 1,3,5,7,9-11,13-15,17,19-23,25,27-35,37,39,41-100
+LICENSE
+  669aebc7651875a5 1-21
+site/src/lib/parser.ts
+  669aebc7651875a5 22,25-32
+lib/panel.mjs
+  669aebc7651875a5 1-43
+templates/sample-nodes/what-is-mywiki.md
+  669aebc7651875a5 1-20
+lib/install-skill.mjs
+  669aebc7651875a5 1-43
+bin/mywiki.mjs
+  669aebc7651875a5 1-31
+.npmignore
+  669aebc7651875a5 1-18
+templates/meta/index.md
+  669aebc7651875a5 1-9
+docs/mywiki/mywiki-ingest/SKILL.md
+  669aebc7651875a5 27,30,38,42,47,56-57,134,248,284,294,340
+templates/sample-nodes/knowledge-vs-notes.md
+  669aebc7651875a5 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "f0eb58583b5e5f4dd6b569e4040c3e332c370b71",
+  "prompts": {
+    "14825591361210c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e88c894a-9f77-4973-a4b5-216e985b145f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1213,
+      "overriden_lines": 0
+    },
+    "4c0f883506696edd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c8ea6de-ff12-4551-95d4-df66cc3cbdf2",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 98,
+      "overriden_lines": 0
+    },
+    "5ec74084f6e62aa5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dfdfb-33db-7501-b871-d7183993751e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 773,
+      "overriden_lines": 0
+    },
+    "60b212cbdaeabc9a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4993-358b-7160-b64b-6310595ff108",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 7,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "62ccd07f3936f4b9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1cc82c0b-d96c-4163-b96d-890cdf162ec0",
+        "model": "mimo-v2-pro"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 661,
+      "overriden_lines": 0
+    },
+    "669aebc7651875a5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5618b6e-354b-40c0-8deb-6c5e357b6a24",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 5669,
+      "total_deletions": 223,
+      "accepted_lines": 1639,
+      "overriden_lines": 0
+    },
+    "7dd7d967a7815348": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ddba62f-4b40-48a8-bc12-0b51b3387be4",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 454,
+      "overriden_lines": 0
+    },
+    "85e6907344dfd13a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3e936d93-a103-4308-bbf2-d0b0804128b0",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1030,
+      "overriden_lines": 0
+    },
+    "9af4b9162dc49fc4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4d94-24de-74d0-9a62-e4e1126828d9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 2,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_4ff32b0d88ed92": {
+      "author": "zhangzhiyuan"
+    }
+  }
+}
