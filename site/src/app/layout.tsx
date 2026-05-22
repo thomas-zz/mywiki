@@ -2,6 +2,8 @@ import './globals.css'
 import { buildWikiData } from '@/lib/parser'
 import { WikiDataProvider } from '@/lib/WikiDataContext'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'myWiki',
   description: '个人理解的镜子',

@@ -1,45 +1,100 @@
-# myWiki — Demo
+# myWiki
 
-> 这是一个**形态原型**，用来确认产品方向。生产版会从你的 markdown 节点自动构建，但 demo 直接用预生成的 `data.js`。
+> 个人知识 wiki — AI 驱动的结构化理解网络
 
-## 怎么打开
+myWiki 不是笔记工具。它存储的是**结构化的理解**：每个节点是一个可独立引用的认知单元（事实、洞见、主张、疑问、辨析），节点之间通过语义关系互联，形成可演化的知识网络。
 
-直接双击 `index.html`，或在浏览器里打开（不需要 server）。
+## Quick Start
 
-**登录密码：`wiki520`**
+```bash
+# 初始化 wiki + 安装 AI skill
+npx mywiki init
 
-## 文件
+# （可选）启动可视化面板
+npx mywiki panel
+```
 
-- `index.html` — 整个 SPA，单文件，CDN 引入 marked + cytoscape
-- `data.js` — 24 个示例节点（技术 / 工作 / 生活 / 思考），含跨域关系
-- `SCHEMA.md` — 节点 markdown schema 定义（这是真正落到你 wiki 里的格式）
-- `sample-nodes/` — 一个真实形态的 markdown 节点示例
+初始化完成后，在 Claude Code 中直接对话即可：
 
-## 五个视图
+```
+> 帮我摄入这篇文章: https://example.com/article
+> 我的 wiki 里有什么关于分布式系统的内容？
+> 跑一遍 lint
+```
 
-1. **首页** — hub、跨域节点、开放问题、正在生长的节点
-2. **节点详情** — 正文 + 来源 + 双向语义关联（按类型分组） + 局部图
-3. **全局图谱** — Cytoscape 力导图，节点大小 = 入链数，颜色 = 元类型
-4. **涌现 · 自进化** — hub / 跨域 hub / 开放问题积压 / 候选拆分 / 最近更新 / 孤岛
-5. **领域页 / 全部节点 / 搜索** — 多维度入口
+## 工作原理
 
-## 设计原则在产品里的体现
+```
+你 ──对话──→ AI Agent (Claude Code 等)
+                 │
+                 ├── 加载 mywiki skill（已安装到 ~/.claude/skills/）
+                 ├── 按规则提炼素材为知识节点
+                 └── 写入 ~/mywiki/nodes/
+                          │
+                          └──→ npx mywiki panel 可视化查看
+```
 
-| 原则 | 在 demo 里的体现 |
-|---|---|
-| 节点优先 | URL 主单元是 `#node/<id>`，所有视图都通向节点详情 |
-| 通用元类型 | 五种颜色一致贯穿（observation/model/decision/question/comparison） |
-| 关系带语义 | 详情页"语义关联"区按 implements/contradicts/contrasts 等分组 |
-| 双向自动 | back-edges 在构建时自动算，详情页用 ↩ 标记 |
-| 跨 wiki 连通 | 节点 `wiki` 字段只是 metadata，不影响图的连通性 |
-| 自进化可见 | 涌现页有"候选拆分（overload signal）"区 |
-| 未完成可见 | open question 有专门入口、status seed/growing 有视觉标记 |
-| 跨域 hub | 涌现页"跨域 hub"区把多 domain 标签 + 高入链的节点单列 |
+**CLI 不做 AI 工作**。AI 逻辑由你自己的 agent 通过已安装的 skill 执行。CLI 只负责环境搭建和面板。
 
-## 已知差距（要在生产版补）
+## 命令
 
-- markdown 真实解析（gray-matter + remark）+ GitHub Action 构建链路
-- LLM 写入接口：lint 提议 / 拆分 / 标注关系
-- Pagefind 全文搜索（demo 用简单子串匹配）
-- 移动端布局
-- 真正的 auth（Cloudflare Access 之类）
+| 命令 | 作用 |
+|------|------|
+| `npx mywiki init [--path <dir>] [--with-samples]` | 创建 wiki 目录 + 安装 skill |
+| `npx mywiki panel [--port 9888]` | 启动可视化面板 |
+| `npx mywiki update` | 更新 skill 到最新版本 |
+
+## 目录结构
+
+```
+~/mywiki/                 ← 你的知识数据（可配置路径）
+├── nodes/                ← wiki 节点（markdown + frontmatter）
+├── raw/                  ← 原始素材
+└── meta/
+    ├── index.md          ← 内容索引
+    └── log.md            ← 操作日志
+```
+
+## 节点示例
+
+```markdown
+---
+id: delayed-gratification
+title: 延迟满足并不是"忍"
+meta_type: insight
+insight_origin: explicit
+domains: ["#生活/育儿", "#自我管理"]
+status: growing
+created: 2025-03-12
+updated: 2025-04-30
+relations:
+  - { to: marshmallow-experiment, type: extends }
+---
+
+延迟满足容易被误解为"克制欲望"。真正起作用的是对"延迟后会发生什么"的清晰预期...
+```
+
+## 可视化面板
+
+面板提供：
+- 首页概览（节点统计、涌现枢纽）
+- 时间线（按更新/创建排序）
+- 全局图谱（Cytoscape 力导向图）
+- 涌现/自进化视图
+- 全文搜索
+
+## 与 OpenClaw / Shortcuts 集成
+
+myWiki 天然支持自动化：在手机上分享一个链接，本地自动完成摄入。
+
+```
+手机分享链接 → OpenClaw/Shortcuts
+    → 触发: claude "请摄入这篇文章: <url>"
+        → agent 按 skill 规则自动处理
+```
+
+只需确保 `npx mywiki init` 已完成（skill 已安装），之后直接触发 claude session 即可。
+
+## License
+
+MIT

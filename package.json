@@ -1,0 +1,31 @@
+{
+  "name": "mywiki",
+  "version": "0.1.0",
+  "description": "个人知识 wiki — AI 驱动的结构化理解网络",
+  "type": "module",
+  "bin": {
+    "mywiki": "./bin/mywiki.mjs"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "skill/",
+    "templates/",
+    "site-dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build:skill": "rm -rf skill && cp -r docs/mywiki skill",
+    "build:site": "bash scripts/build-site.sh",
+    "prepublishOnly": "npm run build:skill && npm run build:site"
+  },
+  "keywords": ["wiki", "knowledge", "ai", "claude", "skill", "personal-knowledge"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^12.0.0"
+  }
+}

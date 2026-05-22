@@ -19,10 +19,17 @@ function normalizeInsightOrigin(value: unknown): InsightOrigin | undefined {
 function getWikiDir(): string {
   const envDir = process.env.WIKI_DIR
   if (envDir) {
-    const resolved = path.isAbsolute(envDir) ? envDir : path.join(process.cwd(), '..', envDir)
+    const resolved = path.isAbsolute(envDir) ? envDir : path.resolve(envDir)
     return path.join(resolved, 'nodes')
   }
-  return path.join(process.cwd(), '..', 'myWiki', 'nodes')
+  // Default: ~/mywiki/nodes
+  const homeDir = process.env.HOME || process.env.USERPROFILE || ''
+  const defaultDir = path.join(homeDir, 'mywiki', 'nodes')
+  if (fs.existsSync(defaultDir)) return defaultDir
+  // Dev fallback: sibling myWiki/ directory (lowest priority)
+  const devDir = path.join(process.cwd(), '..', 'myWiki', 'nodes')
+  if (fs.existsSync(devDir)) return devDir
+  return defaultDir
 }
 
 async function renderMarkdown(content: string): Promise<string> {
