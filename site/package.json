@@ -22,7 +22,9 @@
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "dompurify": "^3.2.4",
     "rehype-highlight": "^7.0.2",
+    "rehype-sanitize": "^6.0.0",
     "rehype-stringify": "^10.0.1",
     "remark": "^15.0.1",
     "remark-rehype": "^11.1.2",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/dompurify": "^3.2.0",
     "@types/cytoscape": "^3.21.9",
     "@types/node": "^20",
     "@types/react": "^19",

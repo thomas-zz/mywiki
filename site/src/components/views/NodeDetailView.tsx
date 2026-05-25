@@ -21,7 +21,8 @@ export function NodeDetailView({ nodeId }: { nodeId: string }) {
     (_, linkId) => {
       const target = data.nodeMap[linkId]
       if (!target) return `[[${linkId}]]`
-      return `<a href="/node/${linkId}" data-nodeid="${linkId}" class="wiki-link">${target.title}</a>`
+      const safeTitle = target.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      return `<a href="/node/${linkId}" data-nodeid="${linkId}" class="wiki-link">${safeTitle}</a>`
     }
   )
 

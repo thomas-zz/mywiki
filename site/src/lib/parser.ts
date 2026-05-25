@@ -6,6 +6,7 @@ import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import rehypeHighlight from 'rehype-highlight'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import type { WikiNode, Edge, Emergence, WikiData, MetaType, NodeStatus, InsightOrigin } from './types'
 
 const WIKILINK_RE = /\[\[([a-z0-9-]+)\]\]/g
@@ -37,7 +38,15 @@ async function renderMarkdown(content: string): Promise<string> {
     .use(remarkParse)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeHighlight, { detect: true })
-    .use(rehypeStringify, { allowDangerousHtml: true })
+    .use(rehypeSanitize, {
+      ...defaultSchema,
+      attributes: {
+        ...defaultSchema.attributes,
+        code: [...(defaultSchema.attributes?.code || []), ['className']],
+        span: [...(defaultSchema.attributes?.span || []), ['className']],
+      },
+    })
+    .use(rehypeStringify)
     .process(content)
   return String(result)
 }

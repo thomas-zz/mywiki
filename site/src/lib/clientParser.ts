@@ -2,6 +2,7 @@
 
 import { Marked } from 'marked'
 import { markedHighlight } from 'marked-highlight'
+import DOMPurify from 'dompurify'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
@@ -137,7 +138,7 @@ export function parseMarkdownToNode(fileName: string, text: string): WikiNode | 
     derived_from: fm.derived_from || [],
     splits_into: fm.splits_into || [],
     body_raw: content,
-    body_html: markedInstance.parse(content, { async: false }) as string,
+    body_html: DOMPurify.sanitize(markedInstance.parse(content, { async: false }) as string),
     metrics: { in_degree: 0, out_degree: 0 },
     back_edges: [],
   }

@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 
+import { createRequire } from 'node:module'
 import { program } from 'commander'
 import { init } from '../lib/init.mjs'
 import { panel } from '../lib/panel.mjs'
 import { update } from '../lib/update.mjs'
 
+const require = createRequire(import.meta.url)
+const { version } = require('../package.json')
+
 program
   .name('mywiki')
   .description('个人知识 wiki — AI 驱动的结构化理解网络')
-  .version('0.1.0')
+  .version(version)
 
 program
   .command('init')
