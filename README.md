@@ -4,6 +4,10 @@
 
 myWiki 不是笔记工具。它存储的是**结构化的理解**：每个节点是一个可独立引用的认知单元（事实、洞见、主张、疑问、辨析），节点之间通过语义关系互联，形成可演化的知识网络。
 
+## 前置条件
+
+- Node.js >= 20
+
 ## Quick Start
 
 ```bash
@@ -34,7 +38,7 @@ npx mywiki-cli panel
                  ├── 按规则提炼素材为知识节点
                  └── 写入 ~/mywiki/nodes/
                           │
-                          └──→ npx mywiki panel 可视化查看
+                          └──→ mywiki panel 可视化查看
 ```
 
 **CLI 不做 AI 工作**。AI 逻辑由你自己的 agent 通过已安装的 skill 执行。CLI 只负责环境搭建和面板。
@@ -96,21 +100,34 @@ npx mywiki-cli panel
 
 默认免登录，直接读取本地 wiki 目录。
 
-### 在线部署（Vercel 等）
+## 在线部署（Vercel 等）
 
 将本仓库部署到 Vercel 后，通过面板内的「数据源」按钮配置 GitHub 仓库（支持私有仓库，需在浏览器中输入 GitHub Personal Access Token）。配置保存在浏览器 localStorage 中，每次打开自动刷新数据。
 
-## 与 OpenClaw / Shortcuts 集成
+建议设置环境变量 `MYWIKI_PASSWORD` 启用密码保护，避免未授权访问你的 token。
 
-myWiki 天然支持自动化：在手机上分享一个链接，本地自动完成摄入。
+## 安全
 
+- 密码保护通过 `MYWIKI_PASSWORD` 环境变量启用，使用 HMAC 签名 cookie 验证
+- Markdown 渲染已做 XSS 清洗（rehype-sanitize + DOMPurify）
+- GitHub Token 仅存储在你的浏览器 localStorage 中，不经过服务端
+
+## 限制
+
+- 面板为只读视图，不支持在线编辑节点（保证单一数据源）
+- 本地面板默认无密码保护（适用于个人电脑）
+
+## 开发
+
+```bash
+git clone <repo-url>
+cd mywiki-cli
+npm install
+cd site && npm install && cd ..
+npm run lint       # ESLint
+npm run build      # 构建 skill + 面板
 ```
-手机分享链接 → OpenClaw/Shortcuts
-    → 触发: claude "请摄入这篇文章: <url>"
-        → agent 按 skill 规则自动处理
-```
 
-只需确保 `mywiki init` 已完成（skill 已安装），之后直接触发 claude session 即可。
 
 ## License
 

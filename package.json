@@ -16,9 +16,12 @@
     "LICENSE"
   ],
   "scripts": {
+    "lint": "cd site && npm run lint",
+    "test": "echo \"No tests yet\" && exit 0",
+    "build": "npm run build:skill && npm run build:site",
     "build:skill": "rm -rf skill && cp -r docs/mywiki skill",
     "build:site": "bash scripts/build-site.sh",
-    "prepublishOnly": "npm run build:skill && npm run build:site"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "wiki",
