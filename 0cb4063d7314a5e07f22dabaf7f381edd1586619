@@ -1,0 +1,35 @@
+site/src/app/api/config/route.ts
+  669aebc7651875a5 1-57
+site/src/components/DataSourcePicker.tsx
+  669aebc7651875a5 31-34,42,60-62,84,99,121,198,260,375-378,380-427,431,437-445,447-451,453-480,482-492,495-496,499-500
+site/src/app/api/wiki-files/route.ts
+  669aebc7651875a5 1-34
+site/src/app/layout.tsx
+  669aebc7651875a5 2,14,22
+site/src/lib/WikiDataContext.tsx
+  669aebc7651875a5 3,25,112,174,206-207,209-210,223-235,239,241,243,262-267
+site/src/lib/parser.ts
+  669aebc7651875a5 36-40
+site/src/lib/auth.ts
+  669aebc7651875a5 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "0cb4063d7314a5e07f22dabaf7f381edd1586619",
+  "prompts": {
+    "669aebc7651875a5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5618b6e-354b-40c0-8deb-6c5e357b6a24",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 1180,
+      "total_deletions": 447,
+      "accepted_lines": 550,
+      "overriden_lines": 0
+    }
+  }
+}
