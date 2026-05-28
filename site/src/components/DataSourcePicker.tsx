@@ -25,11 +25,13 @@ export function DataSourcePicker() {
   const { sources, activeSourceId, addSource, switchSource, removeSource, refreshing } = useWikiDataSources()
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<'list' | 'add'>('list')
-  const [tab, setTab] = useState<'github' | 'local'>('github')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState('')
-  const [githubUrl, setGithubUrl] = useState('')
+  const [githubUrl, setGithubUrl] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('mywiki-gh-url') || ''
+    return ''
+  })
   const [ghToken, setGhToken] = useState('')
   const [showTokenHelp, setShowTokenHelp] = useState(false)
   const [browsing, setBrowsing] = useState(false)
@@ -37,6 +39,7 @@ export function DataSourcePicker() {
   const [browsePath, setBrowsePath] = useState<string[]>([])
   const [repoInfo, setRepoInfo] = useState<{ owner: string; repo: string; branch: string } | null>(null)
   const [browseLoading, setBrowseLoading] = useState(false)
+  const [localPath, setLocalPath] = useState('')
   const backdropRef = useRef<HTMLDivElement>(null)
 
   const closeModal = useCallback(() => {
@@ -54,6 +57,9 @@ export function DataSourcePicker() {
   useEffect(() => {
     const saved = localStorage.getItem(GH_TOKEN_KEY)
     if (saved) setGhToken(saved)
+    fetch('/api/config').then(r => r.ok ? r.json() : null).then(c => {
+      if (c?.wikiDir) setLocalPath(c.wikiDir)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -75,7 +81,7 @@ export function DataSourcePicker() {
     return h
   }, [ghToken])
 
-  const processFiles = useCallback(async (files: { name: string; content: string }[], label: string, type: 'github' | 'local', config?: { owner: string; repo: string; branch: string; path: string }) => {
+  const processFiles = useCallback(async (files: { name: string; content: string }[], label: string, type: 'github' | 'local', config?: { owner: string; repo: string; branch: string; path: string }, sourcePath?: string) => {
     const nodeMap = new Map<string, WikiNode>()
     const failedFiles: string[] = []
     for (const file of files) {
@@ -90,7 +96,7 @@ export function DataSourcePicker() {
       return
     }
     const data = buildWikiDataFromNodes(nodeMap)
-    await addSource(data, label, type, config)
+    await addSource(data, label, type, config, sourcePath)
     setLoading(false)
     setProgress('')
     closeModal()
@@ -112,7 +118,7 @@ export function DataSourcePicker() {
         files.push({ name: entry.name, content: await file.text() })
         setProgress(`读取文件... (${files.length})`)
       }
-      await processFiles(files, dirHandle.name, 'local')
+      await processFiles(files, dirHandle.name, 'local', undefined, undefined)
     } catch (e: any) {
       if (e.name === 'AbortError') return
       setError(e.message || '读取失败')
@@ -189,6 +195,7 @@ export function DataSourcePicker() {
   const connectRepo = useCallback(async (url: string) => {
     const parsed = parseGitHubUrl(url.trim())
     if (!parsed) { setError('无效的 GitHub URL，格式: github.com/owner/repo'); return }
+    localStorage.setItem('mywiki-gh-url', url.trim())
     const { owner, repo, branch, path } = parsed
     const resolvedBranch = branch || 'main'
     setRepoInfo({ owner, repo, branch: resolvedBranch })
@@ -250,7 +257,7 @@ export function DataSourcePicker() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
           style={{ animation: 'fadeIn 0.15s ease-out' }}
         >
-          <div className="rounded-xl shadow-2xl w-[520px] max-h-[85vh] flex flex-col overflow-hidden" style={{ animation: 'fadeIn 0.2s ease-out', background: 'var(--surface)' }}>
+          <div className="rounded-xl shadow-2xl w-[680px] max-h-[75vh] flex flex-col overflow-hidden" style={{ animation: 'fadeIn 0.2s ease-out', background: 'var(--surface)' }}>
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
               <h2 className="text-[15px] font-semibold">
@@ -365,96 +372,132 @@ export function DataSourcePicker() {
               {/* ===== ADD SOURCE VIEW ===== */}
               {view === 'add' && (
                 <div>
-                  {/* Tabs */}
-                  <div className="flex border-b px-5" style={{ borderColor: 'var(--border)' }}>
-                    <button
-                      onClick={() => { setTab('github'); setError(null); setBrowsing(false); setBrowseEntries([]); setBrowsePath([]); setRepoInfo(null) }}
-                      className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors -mb-px ${
-                        tab === 'github' ? 'border-amber-500' : 'border-transparent'
-                      }`}
-                      style={{ color: tab === 'github' ? 'var(--text)' : 'var(--muted)' }}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-                        GitHub 仓库
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => { setTab('local'); setError(null) }}
-                      className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors -mb-px ${
-                        tab === 'local' ? 'border-amber-500' : 'border-transparent'
-                      }`}
-                      style={{ color: tab === 'local' ? 'var(--text)' : 'var(--muted)' }}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                        </svg>
-                        本地文件夹
-                      </span>
-                    </button>
-                  </div>
-
-                  <div className="px-5 py-4">
-                    {tab === 'github' && !browsing && (
-                      <div className="space-y-3">
+                  <div className="px-5 py-4 space-y-5">
+                    {/* GitHub section */}
+                    {!browsing && (
+                      <>
                         <div>
-                          <label className="block text-[12px] font-medium text-gray-500 mb-1.5">仓库地址</label>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="github.com/owner/repo"
-                              value={githubUrl}
-                              onChange={e => setGithubUrl(e.target.value)}
-                              onKeyDown={e => { if (e.key === 'Enter' && githubUrl.trim()) connectRepo(githubUrl) }}
-                              autoFocus
-                              className="flex-1 px-3 py-2 text-[13px] rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-shadow"
-                              style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
-                            />
+                          <div className="flex items-center gap-1.5 mb-3">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--text)' }}><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                            <span className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>GitHub 仓库</span>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-[12px] font-medium text-gray-500 mb-1.5">仓库地址</label>
+                              <input
+                                type="text"
+                                placeholder="github.com/owner/repo"
+                                value={githubUrl}
+                                onChange={e => setGithubUrl(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter' && githubUrl.trim()) connectRepo(githubUrl) }}
+                                autoFocus
+                                className="w-full px-3 py-2 text-[13px] rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-shadow"
+                                style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
+                              />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5 mb-1.5">
+                                <label className="text-[12px] font-medium text-gray-500">访问令牌</label>
+                                <span className="text-[11px] px-1.5 py-0.5 rounded bg-stone-100 text-gray-400">可选</span>
+                                <button onClick={() => setShowTokenHelp(!showTokenHelp)} className="text-[11px] text-amber-600 hover:text-amber-700 underline underline-offset-2">如何获取？</button>
+                              </div>
+                              <input
+                                type="password"
+                                placeholder="ghp_xxxxxxxxxxxx"
+                                value={ghToken}
+                                onChange={e => saveToken(e.target.value)}
+                                className="w-full px-3 py-2 text-[13px] rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-shadow"
+                                style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
+                              />
+                            </div>
+                            {showTokenHelp && (
+                              <div className="rounded-lg p-3 text-[12px] leading-relaxed bg-amber-50 border border-amber-200">
+                                <div className="font-medium text-amber-800 mb-1">获取 GitHub Personal Access Token</div>
+                                <ol className="list-decimal pl-4 space-y-0.5 text-amber-700">
+                                  <li>前往 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:!bg-transparent">github.com/settings/tokens</a> → Generate new token</li>
+                                  <li>Repository access 选择要访问的仓库</li>
+                                  <li>Permissions → Contents → <strong>Read-only</strong></li>
+                                  <li>生成后复制粘贴到上方输入框</li>
+                                </ol>
+                                <div className="mt-1.5 text-amber-600 flex items-center gap-1">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                  Token 仅保存在浏览器本地，不会上传服务器
+                                </div>
+                              </div>
+                            )}
                             <button
                               onClick={() => githubUrl.trim() && connectRepo(githubUrl)}
                               disabled={!githubUrl.trim() || browseLoading}
-                              className="px-4 py-2 text-[13px] font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                              className="w-full py-2.5 text-[13px] font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                               连接
                             </button>
                           </div>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-1.5">
-                            <label className="text-[12px] font-medium text-gray-500">访问令牌</label>
-                            <span className="text-[11px] px-1.5 py-0.5 rounded bg-stone-100 text-gray-400">可选</span>
-                            <button onClick={() => setShowTokenHelp(!showTokenHelp)} className="text-[11px] text-amber-600 hover:text-amber-700 underline underline-offset-2">如何获取？</button>
-                          </div>
-                          <input
-                            type="password"
-                            placeholder="ghp_xxxxxxxxxxxx"
-                            value={ghToken}
-                            onChange={e => saveToken(e.target.value)}
-                            className="w-full px-3 py-2 text-[13px] rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-shadow"
-                            style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
-                          />
+
+                        {/* Divider */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 border-t" style={{ borderColor: 'var(--border)' }} />
+                          <span className="text-[11px]" style={{ color: 'var(--muted)' }}>或</span>
+                          <div className="flex-1 border-t" style={{ borderColor: 'var(--border)' }} />
                         </div>
-                        {showTokenHelp && (
-                          <div className="rounded-lg p-3 text-[12px] leading-relaxed bg-amber-50 border border-amber-200">
-                            <div className="font-medium text-amber-800 mb-1">获取 GitHub Personal Access Token</div>
-                            <ol className="list-decimal pl-4 space-y-0.5 text-amber-700">
-                              <li>前往 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:!bg-transparent">github.com/settings/tokens</a> → Generate new token</li>
-                              <li>Repository access 选择要访问的仓库</li>
-                              <li>Permissions → Contents → <strong>Read-only</strong></li>
-                              <li>生成后复制粘贴到上方输入框</li>
-                            </ol>
-                            <div className="mt-1.5 text-amber-600 flex items-center gap-1">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                              Token 仅保存在浏览器本地，不会上传服务器
+
+                        {/* Local section */}
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text)' }}>
+                              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                            </svg>
+                            <span className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>本地文件夹</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl border p-4 flex flex-col" style={{ borderColor: 'var(--border)' }}>
+                              <div className="text-[12px] font-medium mb-2" style={{ color: 'var(--muted)' }}>输入路径</div>
+                              <input
+                                type="text"
+                                placeholder="~/mywiki"
+                                value={localPath}
+                                onChange={e => setLocalPath(e.target.value)}
+                                className="w-full px-3 py-2 text-[13px] rounded-lg border focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-shadow mb-3"
+                                style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
+                              />
+                              <button
+                                onClick={async () => {
+                                  if (!localPath.trim()) return
+                                  setLoading(true); setError(null); setProgress('通过服务端读取...')
+                                  try {
+                                    const res = await fetch(`/api/wiki-files?dir=${encodeURIComponent(localPath.trim())}`)
+                                    if (!res.ok) { setError('无法读取该路径'); setLoading(false); setProgress(''); return }
+                                    const files = await res.json()
+                                    await processFiles(files, localPath.trim().split('/').pop() || 'Local', 'local', undefined, localPath.trim())
+                                  } catch { setError('读取失败'); setLoading(false); setProgress('') }
+                                }}
+                                disabled={loading || !localPath.trim()}
+                                className="mt-auto w-full py-2 text-[13px] font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 transition-colors"
+                              >
+                                加载
+                              </button>
+                              <p className="mt-2 text-[11px] text-gray-400">路径同步到配置，AI 将摄入到此路径</p>
+                            </div>
+                            <div className="rounded-xl border p-4 flex flex-col items-center justify-center" style={{ borderColor: 'var(--border)' }}>
+                              <div className="text-[12px] font-medium mb-2 self-start" style={{ color: 'var(--muted)' }}>选择文件夹</div>
+                              <div className="flex-1 flex flex-col items-center justify-center">
+                                <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center mb-3">
+                                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#78716c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
+                                </div>
+                                <button onClick={pickFolder} disabled={loading} className="px-4 py-2 text-[13px] font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 transition-colors">
+                                  选择文件夹
+                                </button>
+                              </div>
+                              <p className="mt-2 text-[11px] text-gray-400">自动识别 nodes/ 子目录</p>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      </>
                     )}
 
-                    {/* Directory browser */}
-                    {tab === 'github' && browsing && repoInfo && (
+                    {/* Directory browser (shown after connecting GitHub) */}
+                    {browsing && repoInfo && (
                       <div className="space-y-3">
                         <div className="flex items-center gap-1 text-[12px] flex-wrap">
                           <button onClick={() => { setBrowsing(false); setBrowseEntries([]); setBrowsePath([]); setRepoInfo(null) }} className="text-gray-400 hover:text-gray-600" title="返回输入">
@@ -510,20 +553,6 @@ export function DataSourcePicker() {
                       </div>
                     )}
 
-                    {tab === 'local' && (
-                      <div className="flex flex-col items-center justify-center py-8">
-                        <div className="w-16 h-16 rounded-2xl bg-stone-100 flex items-center justify-center mb-4">
-                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#78716c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
-                        </div>
-                        <p className="text-[13px] text-gray-500 mb-4 text-center">
-                          选择本地 Wiki 文件夹<br />
-                          <span className="text-[12px] text-gray-400">自动识别 nodes/ 子目录中的 .md 文件</span>
-                        </p>
-                        <button onClick={pickFolder} disabled={loading} className="px-5 py-2.5 text-[13px] font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 transition-colors">
-                          选择文件夹
-                        </button>
-                      </div>
-                    )}
 
                     {loading && progress && (
                       <div className="mt-3 flex items-center gap-2 text-[12px] text-blue-600">

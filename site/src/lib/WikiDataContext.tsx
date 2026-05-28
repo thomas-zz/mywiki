@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { WikiData } from '@/lib/types'
 
 const DB_NAME = 'mywiki-cache'
@@ -22,6 +22,7 @@ export interface SourceMeta {
   savedAt: number
   config?: SourceConfig
   nodeCount?: number
+  path?: string
 }
 
 interface SourceRecord extends SourceMeta {
@@ -108,7 +109,7 @@ interface WikiDataContextType {
   activeData: WikiData | null
   activeSourceId: string | null
   sources: SourceMeta[]
-  addSource: (data: WikiData, label: string, type: 'github' | 'local', config?: SourceConfig) => Promise<string>
+  addSource: (data: WikiData, label: string, type: 'github' | 'local', config?: SourceConfig, sourcePath?: string) => Promise<string>
   switchSource: (id: string) => Promise<void>
   removeSource: (id: string) => Promise<void>
   refreshActive: () => Promise<void>
@@ -170,7 +171,7 @@ async function fetchGitHubSource(config: SourceConfig, token: string | null): Pr
   }
 }
 
-export function WikiDataProvider({ serverData, children }: { serverData: WikiData; children: React.ReactNode }) {
+export function WikiDataProvider({ serverData, serverWikiDir, children }: { serverData: WikiData; serverWikiDir?: string; children: React.ReactNode }) {
   const [activeData, setActiveData] = useState<WikiData | null>(null)
   const [activeSourceId, setActiveSourceId] = useState<string | null>(null)
   const [sources, setSources] = useState<SourceMeta[]>([])
@@ -202,7 +203,11 @@ export function WikiDataProvider({ serverData, children }: { serverData: WikiDat
     setRefreshing(false)
   }, [])
 
+  const initRef = useRef(false)
+
   useEffect(() => {
+    if (initRef.current) return
+    initRef.current = true;
     (async () => {
       const [metas, savedId] = await Promise.all([dbGetAllSourceMetas(), dbGetActiveId()])
       setSources(metas.sort((a, b) => b.savedAt - a.savedAt))
@@ -211,19 +216,31 @@ export function WikiDataProvider({ serverData, children }: { serverData: WikiDat
         if (record) {
           setActiveData(record.data)
           setActiveSourceId(savedId)
-          // Auto-refresh from GitHub in background
           if (record.type === 'github' && record.config) {
             refreshFromConfig(record)
           }
         }
+      } else if (metas.length === 0 && serverData && serverData.nodes.length > 0) {
+        const label = serverWikiDir?.split('/').pop() || 'Local'
+        const id = makeSourceId(label, 'local')
+        const existing = await dbLoadSource(id)
+        if (!existing) {
+          const record: SourceRecord = { id, label, type: 'local', data: serverData, savedAt: Date.now(), nodeCount: serverData.nodes.length, path: serverWikiDir }
+          await dbSaveSource(record)
+          await dbSetActiveId(id)
+          setActiveData(serverData)
+          setActiveSourceId(id)
+          const updatedMetas = await dbGetAllSourceMetas()
+          setSources(updatedMetas.sort((a, b) => b.savedAt - a.savedAt))
+        }
       }
       setReady(true)
     })()
-  }, [refreshFromConfig])
+  }, [refreshFromConfig, serverData, serverWikiDir])
 
-  const addSource = useCallback(async (data: WikiData, label: string, type: 'github' | 'local', config?: SourceConfig) => {
+  const addSource = useCallback(async (data: WikiData, label: string, type: 'github' | 'local', config?: SourceConfig, sourcePath?: string) => {
     const id = makeSourceId(label, type)
-    const record: SourceRecord = { id, label, type, data, savedAt: Date.now(), config, nodeCount: data.nodes.length }
+    const record: SourceRecord = { id, label, type, data, savedAt: Date.now(), config, nodeCount: data.nodes.length, path: sourcePath }
     await dbSaveSource(record)
     await dbSetActiveId(id)
     setActiveData(data)
@@ -239,9 +256,15 @@ export function WikiDataProvider({ serverData, children }: { serverData: WikiDat
       setActiveData(record.data)
       setActiveSourceId(id)
       await dbSetActiveId(id)
-      // Refresh if GitHub source
       if (record.type === 'github' && record.config) {
         refreshFromConfig(record)
+      }
+      if (record.type === 'local' && record.path) {
+        fetch('/api/config', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wikiDir: record.path }),
+        }).catch(() => {})
       }
     }
   }, [refreshFromConfig])

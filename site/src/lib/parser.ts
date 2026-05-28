@@ -33,6 +33,11 @@ function getWikiDir(): string {
   return defaultDir
 }
 
+export function getWikiRootDir(): string {
+  const nodesDir = getWikiDir()
+  return path.dirname(nodesDir)
+}
+
 async function renderMarkdown(content: string): Promise<string> {
   const result = await unified()
     .use(remarkParse)
