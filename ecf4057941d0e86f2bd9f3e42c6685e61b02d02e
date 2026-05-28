@@ -1,0 +1,23 @@
+package.json
+  669aebc7651875a5 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "ecf4057941d0e86f2bd9f3e42c6685e61b02d02e",
+  "prompts": {
+    "669aebc7651875a5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5618b6e-354b-40c0-8deb-6c5e357b6a24",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1019,
+      "overriden_lines": 0
+    }
+  }
+}
