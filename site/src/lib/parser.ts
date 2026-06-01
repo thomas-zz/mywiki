@@ -11,6 +11,60 @@ import type { WikiNode, Edge, Emergence, WikiData, MetaType, NodeStatus, Insight
 
 const WIKILINK_RE = /\[\[([a-z0-9-]+)\]\]/g
 
+// ── 文件指纹 & 缓存类型 ──────────────────────────────────────────────────────
+
+interface FileFP { mtime: number; size: number }
+
+interface HtmlCache {
+  version: number
+  entries: Record<string, { fp: FileFP; html: string }>
+}
+
+interface GraphSnapshot {
+  version: number
+  fingerprints: Record<string, FileFP>   // filename → fp（快照新鲜度校验）
+  nodes: WikiNode[]
+  edges: Edge[]
+}
+
+const CACHE_VERSION = 1
+
+function getCachePaths(wikiRoot: string) {
+  const metaDir = path.join(wikiRoot, 'meta')
+  return {
+    htmlCache: path.join(metaDir, '.parse-cache.json'),
+    snapshot:  path.join(metaDir, '.wiki-snapshot.json'),
+  }
+}
+
+function readJson<T>(filePath: string): T | null {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
+  } catch {
+    return null
+  }
+}
+
+function writeJson(filePath: string, data: unknown): void {
+  try {
+    const dir = path.dirname(filePath)
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+    // 原子写入：先写 .tmp 再 rename，避免写入中断导致 JSON 损坏
+    const tmp = filePath + '.tmp'
+    fs.writeFileSync(tmp, JSON.stringify(data), 'utf-8')
+    fs.renameSync(tmp, filePath)
+  } catch (e) {
+    console.warn('[parser] 写缓存失败:', e)
+  }
+}
+
+function getFileFP(filePath: string): FileFP {
+  const st = fs.statSync(filePath)
+  return { mtime: st.mtimeMs, size: st.size }
+}
+
+// ── 核心工具函数 ──────────────────────────────────────────────────────────────
+
 function normalizeInsightOrigin(value: unknown): InsightOrigin | undefined {
   if (typeof value !== 'string') return undefined
   const origin = value.toLowerCase() as InsightOrigin
@@ -23,19 +77,16 @@ function getWikiDir(): string {
     const resolved = path.isAbsolute(envDir) ? envDir : path.resolve(envDir)
     return path.join(resolved, 'nodes')
   }
-  // Default: ~/mywiki/nodes
   const homeDir = process.env.HOME || process.env.USERPROFILE || ''
   const defaultDir = path.join(homeDir, 'mywiki', 'nodes')
   if (fs.existsSync(defaultDir)) return defaultDir
-  // Dev fallback: sibling myWiki/ directory (lowest priority)
   const devDir = path.join(process.cwd(), '..', 'myWiki', 'nodes')
   if (fs.existsSync(devDir)) return devDir
   return defaultDir
 }
 
 export function getWikiRootDir(): string {
-  const nodesDir = getWikiDir()
-  return path.dirname(nodesDir)
+  return path.dirname(getWikiDir())
 }
 
 async function renderMarkdown(content: string): Promise<string> {
@@ -80,9 +131,36 @@ function computeEmergence(nodes: WikiNode[]): Emergence {
   return { hubs, crossDomainHubs, overloadCandidates, orphans, recentUpdates, openQuestions }
 }
 
+// 从节点数组重建 nodeMap / domainMap（反序列化快照后使用）
+function rebuildMaps(nodes: WikiNode[]): Pick<WikiData, 'nodeMap' | 'domainMap'> {
+  const nodeMap: Record<string, WikiNode> = {}
+  for (const node of nodes) nodeMap[node.id] = node
+
+  const domainMap: Record<string, WikiNode[]> = {}
+  for (const node of nodes) {
+    for (const domain of node.domains) {
+      if (!domainMap[domain]) domainMap[domain] = []
+      domainMap[domain].push(node)
+      const stripped = domain.startsWith('#') ? domain.slice(1) : domain
+      const parts = stripped.split('/')
+      for (let i = 1; i < parts.length; i++) {
+        const ancestor = `#${parts.slice(0, i).join('/')}`
+        if (!domainMap[ancestor]) domainMap[ancestor] = []
+        if (!domainMap[ancestor].includes(node)) domainMap[ancestor].push(node)
+      }
+    }
+  }
+  return { nodeMap, domainMap }
+}
+
+// ── 主构建函数 ────────────────────────────────────────────────────────────────
+
 export async function buildWikiData(): Promise<WikiData> {
   const nodesDir = getWikiDir()
+  const wikiRoot = path.dirname(nodesDir)
+  const { htmlCache: htmlCachePath, snapshot: snapshotPath } = getCachePaths(wikiRoot)
 
+  // 1. 读取所有 .md 文件列表
   let files: string[] = []
   try {
     files = fs.readdirSync(nodesDir).filter(f => f.endsWith('.md'))
@@ -90,13 +168,51 @@ export async function buildWikiData(): Promise<WikiData> {
     console.warn(`[buildWikiData] 节点目录不存在: ${nodesDir}，返回空数据`)
     return { nodes: [], edges: [], emergence: computeEmergence([]), nodeMap: {}, domainMap: {} }
   }
+
+  // 2. 计算当前所有文件指纹
+  const currentFPs: Record<string, FileFP> = {}
+  for (const file of files) {
+    currentFPs[file] = getFileFP(path.join(nodesDir, file))
+  }
+
+  // 3. 尝试命中快照（P1-6）：所有文件指纹一致 → 直接返回
+  const snapshot = readJson<GraphSnapshot>(snapshotPath)
+  if (
+    snapshot &&
+    snapshot.version === CACHE_VERSION &&
+    Object.keys(currentFPs).length === Object.keys(snapshot.fingerprints).length &&
+    Object.entries(currentFPs).every(([f, fp]) => {
+      const cached = snapshot.fingerprints[f]
+      return cached && cached.mtime === fp.mtime && cached.size === fp.size
+    })
+  ) {
+    const { nodeMap, domainMap } = rebuildMaps(snapshot.nodes)
+    const emergence = computeEmergence(snapshot.nodes)
+    return { nodes: snapshot.nodes, edges: snapshot.edges, emergence, nodeMap, domainMap }
+  }
+
+  // 4. 加载 HTML 缓存（P1-7）：只跳过未变更文件的 markdown 渲染
+  const htmlCache = readJson<HtmlCache>(htmlCachePath)
+  const htmlEntries = (htmlCache?.version === CACHE_VERSION ? htmlCache.entries : {}) as HtmlCache['entries']
+
+  // 5. 全量构建（对变更文件重新 parse + render）
   const nodeMap = new Map<string, WikiNode>()
+  const newHtmlEntries: HtmlCache['entries'] = {}
 
   for (const file of files) {
-    const raw = fs.readFileSync(path.join(nodesDir, file), 'utf-8')
+    const filePath = path.join(nodesDir, file)
+    const fp = currentFPs[file]
+    const raw = fs.readFileSync(filePath, 'utf-8')
     const { data: fm, content } = matter(raw)
 
-    const bodyHtml = await renderMarkdown(content)
+    // 命中 HTML 缓存则跳过 markdown 渲染
+    const cached = htmlEntries[file]
+    const bodyHtml = (cached && cached.fp.mtime === fp.mtime && cached.fp.size === fp.size)
+      ? cached.html
+      : await renderMarkdown(content)
+
+    newHtmlEntries[file] = { fp, html: bodyHtml }
+
     const implicitRels = extractWikilinks(content, fm.relations || [])
 
     const node: WikiNode = {
@@ -127,7 +243,7 @@ export async function buildWikiData(): Promise<WikiData> {
     node.metrics.out_degree = node.relations.length
     for (const rel of node.relations) {
       const target = nodeMap.get(rel.to)
-      if (!target) { continue }
+      if (!target) continue
       target.metrics.in_degree++
       target.back_edges.push({ from: id, type: rel.type, note: rel.note })
       edges.push({ source: id, target: rel.to, type: rel.type, note: rel.note })
@@ -136,24 +252,11 @@ export async function buildWikiData(): Promise<WikiData> {
 
   const nodes = Array.from(nodeMap.values())
   const emergence = computeEmergence(nodes)
+  const { nodeMap: nodeRecord, domainMap } = rebuildMaps(nodes)
 
-  const domainMap: Record<string, WikiNode[]> = {}
-  for (const node of nodes) {
-    for (const domain of node.domains) {
-      if (!domainMap[domain]) domainMap[domain] = []
-      domainMap[domain].push(node)
-      const stripped = domain.startsWith('#') ? domain.slice(1) : domain
-      const parts = stripped.split('/')
-      for (let i = 1; i < parts.length; i++) {
-        const ancestor = `#${parts.slice(0, i).join('/')}`
-        if (!domainMap[ancestor]) domainMap[ancestor] = []
-        if (!domainMap[ancestor].includes(node)) domainMap[ancestor].push(node)
-      }
-    }
-  }
-
-  const nodeRecord: Record<string, WikiNode> = {}
-  for (const node of nodes) nodeRecord[node.id] = node
+  // 6. 持久化更新的 HTML 缓存（P1-7）和图谱快照（P1-6）
+  writeJson(htmlCachePath, { version: CACHE_VERSION, entries: newHtmlEntries } satisfies HtmlCache)
+  writeJson(snapshotPath, { version: CACHE_VERSION, fingerprints: currentFPs, nodes, edges } satisfies GraphSnapshot)
 
   return { nodes, edges, emergence, nodeMap: nodeRecord, domainMap }
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useWikiData } from '@/lib/WikiDataContext'
 import { MetaTypeChip, StatusBadge, InsightOriginChip } from '@/components/NodeCard'
 import { RelationPanel } from '@/components/RelationPanel'
@@ -7,6 +8,125 @@ import { WikiGraph } from '@/components/WikiGraph'
 import { BackBar } from '@/components/BackBar'
 import { domainToSlug } from '@/lib/domain'
 import Link from 'next/link'
+import type { WikiNode } from '@/lib/types'
+
+// 延伸路径：基于 prerequisite 关系构建学习链
+function LearningPathPanel({ node, nodeMap }: { node: WikiNode; nodeMap: Record<string, WikiNode> }) {
+  // 前置知识：当前节点把哪些节点列为 prerequisite（出边，relations）
+  const prereqs = node.relations
+    .filter(r => r.type === 'prerequisite')
+    .map(r => nodeMap[r.to])
+    .filter(Boolean)
+
+  // 延伸阅读：哪些节点把当前节点列为 prerequisite（入边，back_edges）
+  const next = node.back_edges
+    .filter(e => e.type === 'prerequisite')
+    .map(e => nodeMap[e.from])
+    .filter(Boolean)
+
+  if (prereqs.length === 0 && next.length === 0) return null
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--muted)' }}>延伸路径</h2>
+      <div className="rounded-[10px] p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        {prereqs.length > 0 && (
+          <div className="mb-3">
+            <div className="text-[11px] font-medium mb-2" style={{ color: 'var(--muted)' }}>↑ 前置知识</div>
+            <div className="flex flex-wrap gap-2">
+              {prereqs.map(n => (
+                <Link key={n.id} href={`/node/${n.id}`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] transition-colors hover:opacity-80"
+                  style={{ background: 'var(--hover)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+                  <span className="text-[10px]">📖</span> {n.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {prereqs.length > 0 && next.length > 0 && (
+          <div className="text-center text-[11px] my-2" style={{ color: 'var(--muted)' }}>
+            ↓ 当前节点 · {node.title}
+          </div>
+        )}
+
+        {next.length > 0 && (
+          <div>
+            <div className="text-[11px] font-medium mb-2" style={{ color: 'var(--muted)' }}>↓ 延伸阅读</div>
+            <div className="flex flex-wrap gap-2">
+              {next.map(n => (
+                <Link key={n.id} href={`/node/${n.id}`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] transition-colors hover:opacity-80"
+                  style={{ background: 'var(--hover)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+                  <span className="text-[10px]">🔗</span> {n.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// 影响扩散：如果此节点变更，哪些下游节点会受影响
+function ImpactPanel({ node, nodeMap }: { node: WikiNode; nodeMap: Record<string, WikiNode> }) {
+  const impacted = useMemo(() => {
+    const groups: Record<string, WikiNode[]> = {}
+    for (const edge of node.back_edges) {
+      const src = nodeMap[edge.from]
+      if (!src) continue
+      const type = edge.type || 'related'
+      if (!groups[type]) groups[type] = []
+      groups[type].push(src)
+    }
+    return groups
+  }, [node.back_edges, nodeMap])
+
+  if (node.back_edges.length === 0) return null
+
+  const total = Object.values(impacted).reduce((s, arr) => s + arr.length, 0)
+  if (total === 0) return null
+
+  const REL_LABELS: Record<string, string> = {
+    prerequisite: '依赖此为前置',
+    implements: '实现了此主张',
+    extends: '在此基础上扩展',
+    'instance-of': '是此概念的实例',
+    contradicts: '与此矛盾',
+    contrasts: '与此对比',
+    'evolves-from': '从此演化而来',
+    related: '相关引用',
+  }
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--muted)' }}>影响范围</h2>
+      <p className="text-[11px] mb-3" style={{ color: 'var(--muted)' }}>
+      若此节点内容变更，以下 {total} 个节点可能受影响
+      </p>
+      <div className="space-y-3">
+        {Object.entries(impacted).map(([type, nodes]) => (
+          <div key={type}>
+            <div className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--muted)' }}>
+              {REL_LABELS[type] || type} ({nodes.length})
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {nodes.map(n => (
+                <Link key={n.id} href={`/node/${n.id}`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] transition-colors hover:opacity-80"
+                  style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+                  {n.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export function NodeDetailView({ nodeId }: { nodeId: string }) {
   const data = useWikiData()
@@ -70,6 +190,10 @@ export function NodeDetailView({ nodeId }: { nodeId: string }) {
           <RelationPanel relations={node.relations} backEdges={node.back_edges} nodeMap={data.nodeMap} />
         </div>
       )}
+
+      <LearningPathPanel node={node} nodeMap={data.nodeMap} />
+
+      <ImpactPanel node={node} nodeMap={data.nodeMap} />
 
       <div>
         <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--muted)' }}>局部图谱</h2>

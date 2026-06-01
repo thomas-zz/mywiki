@@ -2,15 +2,13 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import Fuse from 'fuse.js'
 import type { WikiNode, MetaType, NodeStatus } from '@/lib/types'
 import { MetaTypeChip, META_TYPE_CONFIG } from './NodeCard'
 
-function getSnippet(body: string, query: string, around = 30): string | null {
-  const lower = body.toLowerCase()
-  const idx = lower.indexOf(query.toLowerCase())
-  if (idx === -1) return null
-  const start = Math.max(0, idx - around)
-  const end = Math.min(body.length, idx + query.length + around)
+function getSnippetAt(body: string, startIdx: number, endIdx: number, around = 35): string {
+  const start = Math.max(0, startIdx - around)
+  const end = Math.min(body.length, endIdx + around)
   let snippet = body.slice(start, end).replace(/\n/g, ' ')
   if (start > 0) snippet = '…' + snippet
   if (end < body.length) snippet = snippet + '…'
@@ -25,14 +23,14 @@ function Highlight({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((part, i) =>
         re.test(part)
-          ? <mark key={i} className="bg-amber-200 rounded-sm px-px" style={{ color: 'var(--text)' }}>{part}</mark>
+          ? <mark key={i} className="bg-amber-200 rounded-sm px-px" style={{ color: '#1c1917' }}>{part}</mark>
           : <span key={i}>{part}</span>
       )}
     </>
   )
 }
 
-interface ScoredResult {
+interface SearchResult {
   node: WikiNode
   snippet: string | null
   score: number
@@ -45,8 +43,6 @@ const STATUS_LABELS: Record<NodeStatus, string> = {
 export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
-  const [results, setResults] = useState<ScoredResult[]>([])
-  const [totalCount, setTotalCount] = useState(0)
   const [activeIdx, setActiveIdx] = useState(-1)
   const [filterType, setFilterType] = useState<MetaType | ''>('')
   const [filterStatus, setFilterStatus] = useState<NodeStatus | ''>('')
@@ -59,51 +55,46 @@ export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
     return n
   }, [nodes, filterType, filterStatus])
 
-  useEffect(() => {
-    const q = query.trim().toLowerCase()
+  // Fuse 实例：随节点列表/过滤条件变化重建
+  const fuse = useMemo(() => new Fuse(filteredNodes, {
+    keys: [
+      { name: 'title',    weight: 2.0 },
+      { name: 'id',       weight: 0.8 },
+      { name: 'domains',  weight: 0.6 },
+      { name: 'body_raw', weight: 0.3 },
+    ],
+    threshold: 0.28,       // 对中文字符友好：降低容错减少噪音匹配
+    includeScore: true,
+    includeMatches: true,  // 返回匹配位置，用于 snippet 提取
+    ignoreLocation: true,  // 不限制匹配位置（body_raw 深处也能找到）
+    minMatchCharLength: 2,
+  }), [filteredNodes])
+
+  // query 或过滤条件变化时重置键盘导航索引，防止越界
+  useEffect(() => { setActiveIdx(-1) }, [query, filteredNodes])
+
+  const results = useMemo((): SearchResult[] => {
+    const q = query.trim()
     if (!q) {
       if (filterType || filterStatus) {
-        const items: ScoredResult[] = filteredNodes.slice(0, 100).map(node => ({ node, snippet: null, score: 0 }))
-        setTotalCount(filteredNodes.length)
-        setResults(items)
-      } else {
-        setResults([])
-        setTotalCount(0)
+        return filteredNodes.slice(0, 100).map(node => ({ node, snippet: null, score: 0 }))
       }
-      setActiveIdx(-1)
-      return
+      return []
     }
-    const scored: ScoredResult[] = []
 
-    for (const node of filteredNodes) {
-      let score = 0
+    return fuse.search(q, { limit: 100 }).map(({ item: node, score = 1, matches }) => {
+      // 优先用 Fuse 匹配位置提取 snippet（支持模糊匹配场景）
+      const bodyMatch = matches?.find(m => m.key === 'body_raw')
       let snippet: string | null = null
-
-      const titleLower = node.title.toLowerCase()
-      if (titleLower === q) score += 100
-      else if (titleLower.startsWith(q)) score += 80
-      else if (titleLower.includes(q)) score += 60
-
-      if (node.id.toLowerCase().includes(q)) score += 40
-
-      if (node.domains.some(d => d.toLowerCase().includes(q))) score += 30
-
-      if (node.body_raw.toLowerCase().includes(q)) {
-        score += 10
-        if (!score || score <= 10) snippet = getSnippet(node.body_raw, query)
+      if (bodyMatch?.indices?.[0] !== undefined) {
+        const [matchStart, matchEnd] = bodyMatch.indices[0]
+        snippet = getSnippetAt(node.body_raw, matchStart, matchEnd)
       }
+      return { node, snippet, score }
+    })
+  }, [query, fuse, filteredNodes])
 
-      if (score > 0) {
-        if (!snippet && score <= 40) snippet = getSnippet(node.body_raw, query)
-        scored.push({ node, snippet, score })
-      }
-    }
-
-    scored.sort((a, b) => b.score - a.score)
-    setTotalCount(scored.length)
-    setResults(scored.slice(0, 100))
-    setActiveIdx(-1)
-  }, [query, filteredNodes, filterType, filterStatus])
+  const totalCount = results.length
 
   const handleSelect = useCallback(() => {
     setQuery('')
@@ -132,7 +123,7 @@ export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
   const hasFilters = filterType || filterStatus
 
   return (
-    <div className="relative w-full max-w-[520px]">
+    <div className="relative w-full max-w-130">
       <input
         type="text"
         placeholder="搜索节点..."
@@ -188,7 +179,7 @@ export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
               key={n.id}
               href={`/node/${n.id}`}
               data-idx={idx}
-              className={`block px-3 py-2.5 transition-colors ${idx === activeIdx ? '' : ''}`}
+              className="block px-3 py-2.5 transition-colors"
               style={{
                 borderBottom: '1px solid var(--border)',
                 background: idx === activeIdx ? 'var(--hover)' : undefined,
@@ -203,7 +194,7 @@ export function SearchBox({ nodes }: { nodes: WikiNode[] }) {
                 </span>
               </div>
               {snippet && (
-                <div className="text-[11px] leading-relaxed mt-1 ml-[calc(1.5rem+8px)]" style={{ color: 'var(--muted)' }}>
+                <div className="text-[11px] leading-relaxed mt-1 ml-8" style={{ color: 'var(--muted)' }}>
                   <Highlight text={snippet} query={query} />
                 </div>
               )}
