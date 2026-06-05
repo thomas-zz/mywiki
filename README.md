@@ -34,11 +34,11 @@ After initialization, just talk to your AI agent:
 ## How It Works
 
 ```
-You ──chat──→ AI Agent (Claude Code, Cursor, Codex, etc.)
+You ──chat──→ AI Agent (Claude Code, Codex, Gemini CLI, etc.)
                  │
-                 ├── Loads mywiki skill (installed to agent's skill dir)
+                 ├── Loads mywiki skill (synced from ~/.mywiki/skills/mywiki/)
                  ├── Distills material into knowledge nodes
-                 └── Writes to ~/mywiki/nodes/
+                 └── Writes to <wikiDir>/nodes/
                           │
                           └──→ mywiki panel to visualize
 ```
@@ -62,20 +62,33 @@ During `mywiki init`, you can select which tools to install the skill to:
 | Tool | Install Location |
 |------|-----------------|
 | Claude Code | `~/.claude/skills/mywiki/` |
-| Cursor | `~/.cursor/rules/mywiki.mdc` |
-| Codex | `~/.codex/AGENTS.md` |
-| Windsurf | `~/.codeium/windsurf/memories/global_rules.md` |
+| Codex | `~/.codex/skills/mywiki/` |
+| Gemini CLI | `~/.gemini/skills/mywiki/` |
+| OpenCode | `~/.config/opencode/skills/mywiki/` |
+| Hermes | `~/.hermes/skills/mywiki/` |
+
+Legacy compatibility:
+- Cursor still uses `~/.cursor/rules/mywiki.mdc`
+- Windsurf still uses `~/.codeium/windsurf/memories/global_rules.md`
+- On Windows, directory linking falls back to directory copy if junction/symlink creation fails
 
 ## Directory Structure
 
 ```
-~/mywiki/                 ← Your knowledge data (configurable path)
+~/.mywiki/                ← App config + shared skill store
+├── config.json           ← Stores wikiDir, panel settings, target tools
+└── skills/
+    └── mywiki/           ← SSOT skill directory synced to agents
+
+<wikiDir>/                ← Your knowledge data (default: ~/mywiki, configurable)
 ├── nodes/                ← Wiki nodes (markdown + frontmatter)
 ├── raw/                  ← Raw materials
 └── meta/
     ├── index.md          ← Content index
     └── log.md            ← Operation log
 ```
+
+The app config location is fixed at `~/.mywiki/`, while the actual wiki data directory is whatever `~/.mywiki/config.json` stores in `wikiDir`.
 
 ## Node Example
 

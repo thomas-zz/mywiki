@@ -33,6 +33,8 @@ wiki 数据路径查找顺序：
 
 都找不到时询问用户路径。
 
+注意：`~/.mywiki/` 是固定的应用配置目录；真实 wiki 数据目录由 `config.json` 里的 `wikiDir` 决定，二者不是同一个概念。
+
 wiki 包含 `nodes/`、`raw/`、`meta/` 三个子目录。
 
 ## 速查

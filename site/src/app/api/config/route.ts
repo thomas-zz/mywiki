@@ -22,7 +22,7 @@ function isValidWikiDir(dir: unknown): dir is string {
   if (typeof dir !== 'string') return false
   if (dir.length === 0 || dir.length > 500) return false
   if (dir.includes('..')) return false
-  if (!dir.startsWith('/') && !dir.startsWith('~')) return false
+  if (!dir.startsWith('/') && !dir.startsWith('~') && !path.win32.isAbsolute(dir)) return false
   return true
 }
 

@@ -23,7 +23,7 @@ npx mywiki-cli init
 npx mywiki-cli panel
 ```
 
-初始化完成后，在 Claude Code 中直接对话即可：
+初始化完成后，在支持的 AI 工具中直接对话即可：
 
 ```
 > 帮我摄入这篇文章: https://example.com/article
@@ -34,11 +34,11 @@ npx mywiki-cli panel
 ## 工作原理
 
 ```
-你 ──对话──→ AI Agent (Claude Code 等)
+你 ──对话──→ AI Agent (Claude Code、Codex、Gemini CLI 等)
                  │
-                 ├── 加载 mywiki skill（已安装到 ~/.claude/skills/）
+                 ├── 加载 mywiki skill（从 ~/.mywiki/skills/mywiki/ 同步到各 Agent）
                  ├── 按规则提炼素材为知识节点
-                 └── 写入 ~/mywiki/nodes/
+                 └── 写入 <wikiDir>/nodes/
                           │
                           └──→ mywiki panel 可视化查看
 ```
@@ -55,16 +55,40 @@ npx mywiki-cli panel
 
 > 以上命令也可通过 `npx mywiki-cli <command>` 方式运行。
 
+## 支持的 AI 工具
+
+初始化时可选择将 skill 安装到以下工具：
+
+| 工具 | 安装位置 |
+|------|---------|
+| Claude Code | `~/.claude/skills/mywiki/` |
+| Codex | `~/.codex/skills/mywiki/` |
+| Gemini CLI | `~/.gemini/skills/mywiki/` |
+| OpenCode | `~/.config/opencode/skills/mywiki/` |
+| Hermes | `~/.hermes/skills/mywiki/` |
+
+兼容保留：
+- Cursor 仍使用 `~/.cursor/rules/mywiki.mdc`
+- Windsurf 仍使用 `~/.codeium/windsurf/memories/global_rules.md`
+- Windows 上若目录链接创建失败，会自动回退为目录复制
+
 ## 目录结构
 
 ```
-~/mywiki/                 ← 你的知识数据（可配置路径）
+~/.mywiki/                ← 应用配置 + 共享 skill 源目录
+├── config.json           ← 存储 wikiDir、面板设置、目标工具
+└── skills/
+    └── mywiki/           ← SSOT skill 目录，同步到各 Agent
+
+<wikiDir>/                ← 你的知识数据（默认 `~/mywiki`，可自定义）
 ├── nodes/                ← wiki 节点（markdown + frontmatter）
 ├── raw/                  ← 原始素材
 └── meta/
     ├── index.md          ← 内容索引
     └── log.md            ← 操作日志
 ```
+
+应用配置目录固定为 `~/.mywiki/`，而实际被摄入、解析、面板读取的 wiki 数据目录取决于 `~/.mywiki/config.json` 里的 `wikiDir`。
 
 ## 节点示例
 

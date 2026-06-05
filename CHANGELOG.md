@@ -4,6 +4,22 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-05
+
+### Changed
+- skill 安装模型切换为 SSOT：固定使用 `~/.mywiki/skills/mywiki/` 作为源目录，再同步到各 AI 工具
+- Codex / OpenCode 默认从 `AGENTS.md` 注入切换为 `skills/` 目录安装；更新时会自动移除旧的 mywiki 注入区块
+- `~/.mywiki/` 明确为应用配置目录；真实 wiki 数据目录继续由 `~/.mywiki/config.json` 中的 `wikiDir` 决定
+
+### Fixed
+- Windows 目录链接失败时自动回退为目录复制
+- 非 Windows 平台的目录链接失败也会自动回退为目录复制，避免安装中断
+- 面板配置 API 允许 Windows 绝对路径作为 `wikiDir`
+
+### Added
+- 安装/更新输出增加安装模式提示：`symlink` / `junction` / `copy` / `file`
+- 新增安装器自动化测试，覆盖 legacy 注入清理、Cursor/Windsurf 规则安装、Windows copy fallback
+
 ## [0.5.0] - 2026-05-11
 
 ### Added
