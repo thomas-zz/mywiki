@@ -1,0 +1,56 @@
+docs/mywiki/mywiki-ingest/SKILL.md
+  f1946d1446a3cf9d 54-65
+  c4e6976ec00ab2c9 50-53,66-68
+README_zh.md
+  f1946d1446a3cf9d 60,62,64
+  c4e6976ec00ab2c9 58-59,61,63,65
+README.md
+  c4e6976ec00ab2c9 58-59,61,63,65
+  f1946d1446a3cf9d 60,62,64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.3",
+  "base_commit_sha": "ec431cf35e703b98952cdf1ba837eca54bb5ae7b",
+  "prompts": {
+    "adef98bb6766d78c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f3393a79-5796-4df9-aeef-77038b91cab7",
+        "model": "minimax-m3"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 44,
+      "total_deletions": 49,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "c4e6976ec00ab2c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e95b0-13e0-7b53-a8ae-0273f7371f07",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 112,
+      "total_deletions": 0,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    },
+    "f1946d1446a3cf9d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "da2f183c-ed1f-480a-90b8-6b28e62e180e",
+        "model": "glm-5.2"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 36,
+      "total_deletions": 20,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    }
+  }
+}
