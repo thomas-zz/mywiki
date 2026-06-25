@@ -4,7 +4,7 @@ out/
 site-dist/
 skill/
 private/
-myWiki/
+/myWiki/
 mywiki.config.ts
 .npmrc
 .env.local

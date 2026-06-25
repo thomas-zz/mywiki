@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-06-25
+
+### Changed
+- 公众号文章读取改用独立开源 skill [`wechat-mp-article-reader`](https://github.com/Thomas-zz/wechat-mp-article-reader)，移除项目内 lxml 重复实现及对应测试
+- `mywiki-ingest` 公众号兜底改为纯引导流程：优先调已装 skill，未装则引导一行 `git clone` 安装或降级粘贴正文；myWiki 自身不再内置读取脚本
+- README 中英双语"可选独立 Skill"指向独立开源仓库
+
+### Fixed
+- `.gitignore` 中 `myWiki/` 改为 `/myWiki/` 锚定仓库根，避免在大小写不敏感文件系统上误伤 `docs/mywiki/` skill 源目录（此前 `git add` 需 `-f`）
+
 ## [0.3.1] - 2026-06-05
 
 ### Changed
