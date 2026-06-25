@@ -1,0 +1,27 @@
+.gitignore
+  f1946d1446a3cf9d 7
+package.json
+  f1946d1446a3cf9d 3
+CHANGELOG.md
+  f1946d1446a3cf9d 7-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.3",
+  "base_commit_sha": "0019eaf77c9db20ecf9eabed564483e10d9b1a2c",
+  "prompts": {
+    "f1946d1446a3cf9d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "da2f183c-ed1f-480a-90b8-6b28e62e180e",
+        "model": "glm-5.2"
+      },
+      "human_author": "zhangzhiyuan <zhangzhiyuan12837@cvte.com>",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 2,
+      "accepted_lines": 718,
+      "overriden_lines": 0
+    }
+  }
+}
