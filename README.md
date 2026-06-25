@@ -55,6 +55,14 @@ You ──chat──→ AI Agent (Claude Code, Codex, Gemini CLI, etc.)
 
 > All commands can also be run via `npx mywiki-cli <command>`.
 
+## Optional Standalone Skills
+
+myWiki focuses on knowledge ingestion; reading WeChat official account articles is handled by a separate open-source skill (not bundled here, to avoid duplicate maintenance):
+
+- [`wechat-mp-article-reader`](https://github.com/Thomas-zz/wechat-mp-article-reader) — a dedicated WeChat article reader (pure Python stdlib, zero deps, optional playwright fallback)
+
+When a general web fetch cannot reliably read `mp.weixin.qq.com` article bodies, install this skill and `mywiki-ingest` will call it automatically. If it's not installed, the ingest skill guides the user to install it with a single `git clone`, or falls back to asking them to paste the body / export HTML.
+
 ## Supported AI Tools
 
 During `mywiki init`, you can select which tools to install the skill to:

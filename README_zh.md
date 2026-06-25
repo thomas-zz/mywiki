@@ -55,6 +55,14 @@ npx mywiki-cli panel
 
 > 以上命令也可通过 `npx mywiki-cli <command>` 方式运行。
 
+## 可选独立 Skill
+
+myWiki 专注知识摄入；读取微信公众号文章由一个独立开源 skill 负责（不在本仓库内，避免双份维护）：
+
+- [`wechat-mp-article-reader`](https://github.com/Thomas-zz/wechat-mp-article-reader) — 专门读取微信公众号文章正文（纯 Python 标准库，零依赖，playwright 浏览器兜底可选）
+
+当普通网页读取拿不到 `mp.weixin.qq.com` 正文时，安装这个 skill，`mywiki-ingest` 会自动调用它。如果没装，ingest skill 会引导用户用一行 `git clone` 安装，或降级为请用户粘贴正文 / 导出 HTML。
+
 ## 支持的 AI 工具
 
 初始化时可选择将 skill 安装到以下工具：
